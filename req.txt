@@ -1,2 +1,18 @@
 streamlit 
-granite
+transformers 
+accelerate
+torch
+
+ibm-watsonx-ai
+tokenizers
+bitsandbytes
+xformers
+
+sentencepiece
+protobuf
+safetensors
+
+# Para JSON limpo e YAML
+orjson
+pyyaml
+

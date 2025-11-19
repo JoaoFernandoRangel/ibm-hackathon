@@ -1,0 +1,42 @@
+{
+    "total_tristeza": 7,
+    "todas_pessoas": [
+        "Sofia",
+        "Vinícius",
+        "Carla",
+        "Ana",
+        "Mariana",
+        "Pedro",
+        "Luiza",
+        "Gustavo",
+        "Caio",
+        "Helena",
+        "Eduardo",
+        "Inspetora Rosa",
+        "Daniel",
+        "Felipe",
+        "Clara",
+        "Renato",
+        "Júlia",
+        "Lucas",
+        "Marina",
+        "diretor"
+    ],
+    "todas_interacoes": [
+        "conversei com o Lucas sobre o trabalho de ciências",
+        "jogou vôlei com a Júlia",
+        "briguei com o Pedro",
+        "me ajudou com um exercício de física",
+        "planejando como estudar",
+        "escorreguei na quadra",
+        "fiquei muito frustrado",
+        "helping Gustavo to set up his notebook",
+        "playing with the class",
+        "listening to a story",
+        "sending a message to Clara",
+        "apresentação dos projetos",
+        "parabéns para todo mundo",
+        "procurar por meu cartão do lanche",
+        "conversando sobre o fim de semana"
+    ]
+}
