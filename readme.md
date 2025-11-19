@@ -1,6 +1,5 @@
-...existing code...
 
-# 🧠 Granite Diary Analyzer
+# Granite Diary Analyzer
 
 **Extração automática de sentimentos, pessoas e eventos a partir de páginas de diário usando IBM Granite + Transformers**
 
@@ -24,7 +23,7 @@ Ferramenta modular, com suporte a execução local em GPU ou via Watsonx.ai, que
 ## Arquitetura do projeto
 
 ```
-hackaton-diario/  (pasta do projeto: /hackaton/)
+ibm-hackathon/  
 │
 ├── src/
 │   ├── backends/
@@ -37,7 +36,7 @@ hackaton-diario/  (pasta do projeto: /hackaton/)
 │   └── config_watsonx.py           → configs/credenciais do Watsonx
 │
 ├── main.py                         → pipeline unificado (escolhe backend)
-├── requirements.txt  / req.txt
+├── req.txt
 ├── database/                        → .txt input
 └── results/                         → .json outputs
 ```
@@ -164,22 +163,3 @@ WATSONX_API_KEY = "<sua_api_key>"
 WATSONX_PROJECT_ID = "<seu_project_id>"
 ```
 
----
-
-## Desenvolvimento & extensões
-- Adicionar FastAPI para endpoint HTTP
-- Dashboard Streamlit
-- Suporte a PDF/DOCX
-- Integração com DB e autenticação
-- Execução assíncrona / streaming para grandes volumes
-
----
-
-## Créditos & Licença
-- IBM Granite, HuggingFace Transformers, bitsandbytes
-- Licença: MIT (adicione arquivo LICENSE)
-
---- 
-
-Se desejar, gero o README completo já atualizado (substituir o arquivo), ou crio/atualizo os arquivos `src/backends/*.py` e `main.py` com o esqueleto para alternância entre backends.
-...existing code...
