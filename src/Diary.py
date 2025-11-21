@@ -11,6 +11,8 @@ from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
 from transformers import AutoTokenizer, AutoModelForCausalLM
 # Adicione essencialmente APÓS seus imports:
 from src.firebase_db import save_page_result, save_week_summary
+from firebase_admin import credentials, firestore, initialize_app
+
 
 
 
@@ -192,19 +194,19 @@ class DiaryAnalyzer:
 
         return data
     # =====================================================
-#  FIREBASE (WRITE / QUERY)
-# =====================================================
+    #  FIREBASE (WRITE / QUERY)
+    # =====================================================
 
-def save_to_firestore(self, collection, document_id, data):
-    """
-    Salva um dicionário no Firestore.
-    """
-    try:
-        db = firestore.client()
-        db.collection(collection).document(document_id).set(data)
-        print(f"[🔥] Documento salvo no Firestore: {collection}/{document_id}")
-    except Exception as e:
-        print(f"[ERRO FIRESTORE] {e}")
+    def save_to_firestore(self, collection, document_id, data):
+        """
+        Salva um dicionário no Firestore.
+        """
+        try:
+            db = firestore.client()
+            db.collection(collection).document(document_id).set(data)
+            print(f"[🔥] Documento salvo no Firestore: {collection}/{document_id}")
+        except Exception as e:
+            print(f"[ERRO FIRESTORE] {e}")
 
 
     def get_document(self, collection, document_id):
