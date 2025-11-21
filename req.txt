@@ -1,22 +1,27 @@
+# interface
 streamlit
 
-transformers==4.44.2
-accelerate==0.30.1
+# watsonx
+ibm-watsonx-ai
 
-
-torch==2.1.2
-
-# Compatíveis com Torch 2.1.x
-xformers==0.0.22
-bitsandbytes==0.41.1
-
-tokenizers==0.19.1
-sentencepiece
-protobuf
-safetensors
-
-orjson
-pyyaml
+# firebase
 firebase-admin
 
-ibm-watsonx-ai
+# utilidades
+orjson
+pyyaml
+protobuf
+sentencepiece
+
+# Granite local
+torch
+transformers
+tokenizers
+safetensors
+
+# quantização
+bitsandbytes
+accelerate
+
+# acelerar inference (opcional)
+#xformers==0.0.25   # CUDA 12.1
