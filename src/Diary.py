@@ -92,6 +92,7 @@ class DiaryAnalyzer:
                 GenParams.DECODING_METHOD: "greedy",
                 GenParams.MAX_NEW_TOKENS: 160,
                 GenParams.REPETITION_PENALTY: 1.1,
+                GenParams.TEMPERATURE: 0.7
             }
 
             self.watsonx_model = Model(
@@ -190,6 +191,89 @@ class DiaryAnalyzer:
         save_page_result(page_name, data)
 
         return data
+    # =====================================================
+#  FIREBASE (WRITE / QUERY)
+# =====================================================
+
+def save_to_firestore(self, collection, document_id, data):
+    """
+    Salva um dicionário no Firestore.
+    """
+    try:
+        db = firestore.client()
+        db.collection(collection).document(document_id).set(data)
+        print(f"[🔥] Documento salvo no Firestore: {collection}/{document_id}")
+    except Exception as e:
+        print(f"[ERRO FIRESTORE] {e}")
+
+
+    def get_document(self, collection, document_id):
+        """
+        Busca um documento pelo ID.
+        """
+        try:
+            db = firestore.client()
+            doc_ref = db.collection(collection).document(document_id)
+            doc = doc_ref.get()
+
+            if doc.exists:
+                print(f"[🔥] Documento encontrado: {collection}/{document_id}")
+                return doc.to_dict()
+            else:
+                print(f"[!] Documento não existe: {collection}/{document_id}")
+                return None
+
+        except Exception as e:
+            print(f"[ERRO FIRESTORE] {e}")
+            return None
+
+
+    def query_collection(self, collection, field, op, value):
+        """
+        Consulta avançada.
+
+        op pode ser:
+        - '=='
+        - '<'
+        - '<='
+        - '>'
+        - '>='
+        - 'array_contains'
+
+        EXEMPLO:
+            query_collection("paginas", "tristeza", ">=", 2)
+        """
+        try:
+            db = firestore.client()
+            results = db.collection(collection).where(field, op, value).stream()
+
+            output = [doc.to_dict() for doc in results]
+            print(f"[🔥] {len(output)} resultados encontrados em '{collection}'")
+
+            return output
+
+        except Exception as e:
+            print(f"[ERRO FIRESTORE] {e}")
+            return []
+
+
+    def list_all(self, collection):
+        """
+        Lista todos os documentos de uma coleção.
+        """
+        try:
+            db = firestore.client()
+            docs = db.collection(collection).stream()
+
+            output = {doc.id: doc.to_dict() for doc in docs}
+            print(f"[🔥] Coleção '{collection}' retornou {len(output)} docs")
+
+            return output
+
+        except Exception as e:
+            print(f"[ERRO FIRESTORE] {e}")
+            return {}
+
 
     # =====================================================
     #  PIPELINE PRINCIPAL
