@@ -21,6 +21,8 @@ Depois encontrei João e me senti menos triste.
 # Rodar teste
 resultado = an.run_single_page(texto, page_name="pagina_teste")
 
+
+
 print("\n===== RESULTADO PROCESSADO =====")
 print(resultado)
 print("\n✓ Verifique no Firestore -> diary_pages/pagina_teste\n")
