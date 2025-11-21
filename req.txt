@@ -15,4 +15,4 @@ safetensors
 # Para JSON limpo e YAML
 orjson
 pyyaml
-
+matplotlib
