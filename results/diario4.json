@@ -1,6 +1,10 @@
 {
-  "tristeza": 1,
-  "pessoas_mencionadas": ["Gustavo", "Luiza", "Marina", "Daniel", "Clara"],
-  "interacoes": ["helping o Gustavo a configurar o notebook", "playing adivinhação", "laughing so much that I even forgot about the problems", "sending a message to Clara to ask how I was"],
-  "sentimentos": ["sadness", "amusement", "frustration", "relief"]
-}
+          "tristeza": 1,
+          "pessoas_mencionadas": ["Gustavo", "Luiza", "Marina", "Daniel", "Clara"],
+          "interacoes": [
+            "Ajudar Gustavo a configurar o notebook",
+            "Brincar de adivinhação com a turma durante o recreio",
+            "Receber um comentário injusto do professor Daniel"
+          ],
+          "sentimentos": ["alegre", "contente", "triste"]
+        }

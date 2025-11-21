@@ -10,7 +10,8 @@ from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
 # Local Granite
 from transformers import AutoTokenizer, AutoModelForCausalLM
 # Adicione essencialmente APÓS seus imports:
-from src.firebase_db import save_page_result, save_week_summary
+#from src.firebase_db import save_page_result, save_week_summary
+from src.cloudant_db import save_page_result, save_week_summary
 from firebase_admin import credentials, firestore, initialize_app
 
 
@@ -184,6 +185,34 @@ class DiaryAnalyzer:
         save_page_result(page_name, data)
 
         return data
+
+
+        def save_to_cloudant(self, collection, document_id, data):
+        db = client[collection]
+        doc = db.get(document_id)
+        if doc:
+            doc.update(data)
+            doc.save()
+        else:
+            db.create_document({ "_id": document_id, **data })
+
+    def get_document(self, collection, document_id):
+        db = client[collection]
+        doc = db.get(document_id)
+        if doc:
+            return doc
+        else:
+            return None
+
+    def query_collection(self, collection, field, op, value):
+        db = client[collection]
+        results = db.get_query_result({ field: { op: value } })
+        return [doc for doc in results]
+
+    def list_all(self, collection):
+        db = client[collection]
+        docs = db.all_docs()
+        return {doc["_id"]: doc for doc in docs}
     # =====================================================
     #  FIREBASE (WRITE / QUERY)
     # =====================================================
@@ -198,74 +227,6 @@ class DiaryAnalyzer:
             print(f"[🔥] Documento salvo no Firestore: {collection}/{document_id}")
         except Exception as e:
             print(f"[ERRO FIRESTORE] {e}")
-
-
-    def get_document(self, collection, document_id):
-        """
-        Busca um documento pelo ID.
-        """
-        try:
-            db = firestore.client()
-            doc_ref = db.collection(collection).document(document_id)
-            doc = doc_ref.get()
-
-            if doc.exists:
-                print(f"[🔥] Documento encontrado: {collection}/{document_id}")
-                return doc.to_dict()
-            else:
-                print(f"[!] Documento não existe: {collection}/{document_id}")
-                return None
-
-        except Exception as e:
-            print(f"[ERRO FIRESTORE] {e}")
-            return None
-
-
-    def query_collection(self, collection, field, op, value):
-        """
-        Consulta avançada.
-
-        op pode ser:
-        - '=='
-        - '<'
-        - '<='
-        - '>'
-        - '>='
-        - 'array_contains'
-
-        EXEMPLO:
-            query_collection("paginas", "tristeza", ">=", 2)
-        """
-        try:
-            db = firestore.client()
-            results = db.collection(collection).where(field, op, value).stream()
-
-            output = [doc.to_dict() for doc in results]
-            print(f"[🔥] {len(output)} resultados encontrados em '{collection}'")
-
-            return output
-
-        except Exception as e:
-            print(f"[ERRO FIRESTORE] {e}")
-            return []
-
-
-    def list_all(self, collection):
-        """
-        Lista todos os documentos de uma coleção.
-        """
-        try:
-            db = firestore.client()
-            docs = db.collection(collection).stream()
-
-            output = {doc.id: doc.to_dict() for doc in docs}
-            print(f"[🔥] Coleção '{collection}' retornou {len(output)} docs")
-
-            return output
-
-        except Exception as e:
-            print(f"[ERRO FIRESTORE] {e}")
-            return {}
 
 
     # =====================================================

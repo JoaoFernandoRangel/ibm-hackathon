@@ -1,6 +1,7 @@
 import json
 from src.Diary import DiaryAnalyzer
-
+import time
+from segredos.watson_api import project_id
 
 def print_menu():
     print("\n========================================")
@@ -31,16 +32,19 @@ def escolher_backend():
 
 
 def main():
-
+    #a chave está em segredos/apikey.json devo puxar o campo apikey
+    with open("segredos/apikey.json", "r") as f:
+        apikey_data = json.load(f)
     backend = escolher_backend()
 
     print("\nInicializando DiaryAnalyzer...\n")
 
     an = DiaryAnalyzer(
         backend=backend,
-        watsonx_api_key="SUA_API_KEY_AQUI",
-        watsonx_project_id="SEU_PROJECT_ID_AQUI"
+        watsonx_api_key= apikey_data["apikey"],
+        watsonx_project_id=project_id
     )
+
 
     while True:
         print_menu()
@@ -51,7 +55,7 @@ def main():
         # ==========================================================
         if op == "1":
             texto = input("\nDigite o texto da página:\n> ")
-            result = an.run_single_page(texto, page_name="pagina_manual")
+            result = an.run_single_page(texto, page_name=f"pagina_manual_{int(time.time())}")
 
             print("\n🔍 Resultado do Granite:")
             print(json.dumps(result, indent=4, ensure_ascii=False))
