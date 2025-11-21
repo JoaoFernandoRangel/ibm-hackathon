@@ -1,18 +1,22 @@
-streamlit 
-transformers 
-accelerate
-torch
+streamlit
 
-ibm-watsonx-ai
-tokenizers
-bitsandbytes
-xformers
+transformers==4.44.2
+accelerate==0.30.1
 
+
+torch==2.1.2
+
+# Compatíveis com Torch 2.1.x
+xformers==0.0.22
+bitsandbytes==0.41.1
+
+tokenizers==0.19.1
 sentencepiece
 protobuf
 safetensors
 
-# Para JSON limpo e YAML
 orjson
 pyyaml
+firebase-admin
 
+ibm-watsonx-ai
