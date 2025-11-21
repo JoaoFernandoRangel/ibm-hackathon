@@ -1,18 +1,17 @@
-streamlit 
-transformers 
-accelerate
-torch
+streamlit
 
-ibm-watsonx-ai
-tokenizers
-bitsandbytes
-xformers
+torch==2.2.1
+transformers==4.44.2
+accelerate==0.30.1
+bitsandbytes==0.43.1
 
 sentencepiece
-protobuf
+tokenizers==0.19.1
 safetensors
 
-# Para JSON limpo e YAML
 orjson
 pyyaml
+protobuf
 
+firebase-admin
+ibm-watsonx-ai
