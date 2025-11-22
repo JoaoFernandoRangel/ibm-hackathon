@@ -42,7 +42,7 @@ def main():
     an = DiaryAnalyzer(
         backend=backend,
         watsonx_api_key= apikey_data["apikey"],
-        watsonx_project_id=project_id
+        watsonx_project_id="cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
     )
 
 

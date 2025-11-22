@@ -16,6 +16,7 @@ orjson
 pyyaml
 protobuf
 sentencepiece
+matplotlib
 
 # Granite local
 torch
