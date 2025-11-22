@@ -1,6 +1,11 @@
 {
-  "tristeza": 1,
-  "pessoas_mencionadas": ["Sofia", "Vinícius", "Carla", "diretor", "Inspetora Rosa", "Lucas", "Júlia"],
-  "interacoes": ["apresentação dos projetos", "parabéns para todo mundo", "procurar por meu cartão do lanche"],
-  "sentimentos": ["feliz", "triste", "grata", "emocionada", "contente", "chateada"]
-}
+          "tristeza": 1,
+          "pessoas_mencionadas": ["Sofia", "Vinícius", "Carla", "diretor", "inspetora Rosa", "Lucas", "Júlia"],
+          "interacoes": [
+            "apresentação dos projetos",
+            "parabéns do diretor",
+            "perder o cartão do lanche",
+            "procurar com a inspetora Rosa"
+          ],
+          "sentimentos": ["animado", "completo", "chateado"]
+        }
