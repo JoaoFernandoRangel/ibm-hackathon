@@ -54,8 +54,7 @@ def main():
         resp = input()
         if resp == "1":
             input_data = GmailSendInput(
-                #TODO Remover email paulino
-                to='paulinopereirajr@gmail.com',
+                to='email-teste@gmail.com',
                 subject=assunto,
                 body='This is a test email.',
                 access_token=access_token
