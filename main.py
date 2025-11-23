@@ -1,6 +1,7 @@
 import json
 from src.Diary import DiaryAnalyzer
 import time
+#API Mudar para st.secrets
 from segredos.watson_api import project_id
 
 def print_menu():
@@ -33,6 +34,7 @@ def escolher_backend():
 
 def main():
     #a chave está em segredos/apikey.json devo puxar o campo apikey
+    #API Mudar para st.secrets
     with open("segredos/apikey.json", "r") as f:
         apikey_data = json.load(f)
     backend = escolher_backend()

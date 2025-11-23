@@ -4,6 +4,7 @@ from src.Diary import DiaryAnalyzer
 from segredos.watson_api import project_id
 
 
+#API Mudar para st.secrets
 def load_apikey():
     try:
         with open("segredos/apikey.json", "r", encoding="utf-8") as f:

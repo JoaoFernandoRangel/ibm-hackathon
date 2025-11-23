@@ -10,9 +10,9 @@ from segredos.watson_api import project_id
 with open("segredos/apikey.json", "r") as f:
     apikey_data = json.load(f)
 
+#API key
 API_KEY = apikey_data["apikey"]
 URL = "https://us-south.ml.cloud.ibm.com"  # normalmente este
-
 credentials = Credentials(api_key=API_KEY, url=URL)
 
 # ====================================

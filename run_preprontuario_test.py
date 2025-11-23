@@ -2,6 +2,7 @@ import json, os
 from src.Diary import DiaryAnalyzer
 from segredos.watson_api import project_id
 
+#API mudar para st.secrets
 # load apikey
 with open('segredos/apikey.json','r',encoding='utf-8') as f:
     apikey = json.load(f).get('apikey')

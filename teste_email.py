@@ -38,7 +38,7 @@ def get_access_token(refresh_token, client_id, client_secret):
 def main():
     assunto = "Joao"
     
-        
+     #API mudar para st.secrets   
     with open("segredos/client_secret.json", "r") as f:
         secrets = json.load(f)
     

@@ -42,7 +42,7 @@ def tela_pacientes():
     from datetime import datetime, timedelta
     from src.read_replies_tool import GmailReadRepliesInput, read_replies
 
- 
+    #API verificar tokens
     from src.send_email_tool import (
     GmailSendInput,
     send_gmail_email,
@@ -81,14 +81,15 @@ def tela_pacientes():
     st.markdown("### 💬 Latest patient reply (via email)")
     try:
         # Carregar segredos
+        #API mudar para st.secrets
         with open("segredos/client_secret.json", "r", encoding="utf-8") as f:
             secrets = json.load(f)
-
         refresh_token = secrets['installed']['refresh_token']
         client_id = secrets['installed']['client_id']
         client_secret = secrets['installed']['client_secret']
 
         # Obter novo access token
+        #API mudar para st.secrets
         access_token = get_access_token(refresh_token, client_id, client_secret)
 
         if not isinstance(access_token, str) or not access_token:
@@ -151,6 +152,7 @@ def tela_pacientes():
         email_dest = patient_data.get("email", email_sel)  # fallback to dict key
         # Gmail Access token  
 
+        #API verificar tokens
         try:
             with open("secrets/client_secret.json", "r", encoding="utf-8") as f:
                 secrets = json.load(f)
@@ -162,6 +164,7 @@ def tela_pacientes():
             return
 
         # exchange refresh token for a fresh access token (string)
+        #API verificar tokens
         try:
             gmail_access_token = get_access_token(refresh_token, client_id, client_secret)
         except Exception as e:
@@ -221,6 +224,7 @@ def tela_pacientes():
             return
 
         # Obtain fresh access token
+        #API verificar tokens
         try:
             with open("segredos/client_secret.json", "r", encoding="utf-8") as f:
                 secrets = json.load(f)
