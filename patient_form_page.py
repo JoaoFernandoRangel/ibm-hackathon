@@ -6,7 +6,7 @@ from src.triage import assess_risk
 from src.Diary import DiaryAnalyzer
 import streamlit as st
 from src.orchestrate_tools import orchestrate_followup_workflow, OrchestrateFollowupInput
-import KeyChain
+from KeyChain import KeyChain
 
 project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
 # Schema fixo do formulário
@@ -31,7 +31,8 @@ FORM_SCHEMA = {
     "exercise_frequency": "select:None,1-2 times/week,3-5 times/week,Daily",
     "diet_description": "text"
 }
-
+kc = KeyChain()
+keys = kc.load_from_env()
 import streamlit as st
 from src.Diary import DiaryAnalyzer
 
@@ -80,10 +81,7 @@ def tela_pacientes():
     # -----------------------------
     st.markdown("### 💬 Latest patient reply (via email)")
     try:
-        # Carregar segredos
-
-        kc = KeyChain()
-        keys = kc.load_from_streamlit(st)
+        
 
         refresh_token = keys["GMAIL_REFRESH_TOKEN"]
         client_id = keys["GMAIL_CLIENT_ID"]
@@ -154,8 +152,7 @@ def tela_pacientes():
         # Gmail Access token         
         # API verificar tokens
         try:
-            kc = KeyChain()
-            keys = kc.load_from_streamlit(st)
+            
 
             refresh_token = keys.get("GMAIL_REFRESH_TOKEN")
             client_id = keys.get("GMAIL_CLIENT_ID")
@@ -232,9 +229,9 @@ def tela_pacientes():
         #API verificar tokens
         try:
  
-            refresh_token = kc.load_from_streamlit(st).get("GMAIL_REFRESH_TOKEN")
-            client_id = kc.load_from_streamlit(st).get("GMAIL_CLIENT_ID")
-            client_secret = kc.load_from_streamlit(st).get("GMAIL_CLIENT_SECRET")
+            refresh_token = kc.load_from_env().get("GMAIL_REFRESH_TOKEN")
+            client_id = kc.load_from_env().get("GMAIL_CLIENT_ID")
+            client_secret = kc.load_from_env().get("GMAIL_CLIENT_SECRET")
             gmail_access_token = get_access_token(refresh_token, client_id, client_secret)
         except Exception as e:
             st.error(f"Could not obtain Gmail access token: {e}")

@@ -15,9 +15,7 @@ def load_apikey():
 
 def main():
     apikey = load_apikey()
-    if not apikey:
-        print("API key not found in segredos/apikey.json")
-        sys.exit(1)
+
 
     an = DiaryAnalyzer(
         backend="watsonx",

@@ -12,7 +12,7 @@ project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
 
 # load apikey only if watsonx
 kc = KeyChain()
-apikey = kc.load_from_streamlit(st).get("WATSONX_APIKEY")
+apikey = kc.load_from_env().get("WATSONX_APIKEY")
 an = DiaryAnalyzer(backend="watsonx", watsonx_api_key=apikey, watsonx_project_id=project_id)
 
 # --- Credenciais hardcoded ---
