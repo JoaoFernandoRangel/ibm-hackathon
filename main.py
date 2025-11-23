@@ -1,9 +1,10 @@
 import json
 from src.Diary import DiaryAnalyzer
 import time
+import streamlit as st
 #API Mudar para st.secrets
 from segredos.watson_api import project_id
-
+import KeyChain
 def print_menu():
     print("\n========================================")
     print("      GRANITE DIARY ANALYZER  (CLI)     ")
@@ -35,18 +36,19 @@ def escolher_backend():
 def main():
     #a chave está em segredos/apikey.json devo puxar o campo apikey
     #API Mudar para st.secrets
-    with open("segredos/apikey.json", "r") as f:
-        apikey_data = json.load(f)
+
+    kc = KeyChain()
+    keys = kc.load_from_streamlit(st)
+
     backend = escolher_backend()
 
     print("\nInicializando DiaryAnalyzer...\n")
 
     an = DiaryAnalyzer(
         backend=backend,
-        watsonx_api_key= apikey_data["apikey"],
+        watsonx_api_key=keys["GMAIL_APIKEY"],  # Agora vem do st.secrets
         watsonx_project_id=project_id
     )
-
 
     while True:
         print_menu()

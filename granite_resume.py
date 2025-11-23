@@ -2,18 +2,22 @@ import json
 from ibm_watsonx_ai import Credentials
 from ibm_watsonx_ai.foundation_models import Model
 from segredos.watson_api import project_id
+import KeyChain
 
 # ================================
-# Loading API key
+# Loading API key via KeyChain
 # ================================
 
-with open("segredos/apikey.json", "r") as f:
-    apikey_data = json.load(f)
+kc = KeyChain()                   # já carrega o .env automaticamente
+keys = kc.load_from_env()         # ou kc.load_from_streamlit(st)
 
-#API key
-API_KEY = apikey_data["apikey"]
-URL = "https://us-south.ml.cloud.ibm.com"  # normalmente este
-credentials = Credentials(api_key=API_KEY, url=URL)
+API_KEY = keys["GMAIL_APIKEY"]    # mesma apikey que estava no apikey.json
+URL = "https://us-south.ml.cloud.ibm.com"
+
+credentials = Credentials(
+    api_key=API_KEY,
+    url=URL
+)
 
 # ====================================
 # Configuring Granite model
@@ -26,8 +30,9 @@ model = Model(
         "temperature": 0.2,
         "max_tokens": 600
     },
-    project_id=project_id
+    project_id=project_id,
 )
+
 
 # ======================================
 # Function to summarize a clinical case
