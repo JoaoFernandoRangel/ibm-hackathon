@@ -33,6 +33,11 @@ class KeyChain:
         keys["FIREBASE_PRIVATE_KEY"] = os.getenv("FIREBASE_PRIVATE_KEY")
         keys["FIREBASE_PROJECT_ID"] = os.getenv("FIREBASE_PROJECT_ID")
 
+        # Common custom entries (include WATSONX keys)
+        keys["WATSONX_APIKEY"] = os.getenv("WATSONX_APIKEY")
+        keys["WATSONX_KEY"] = os.getenv("WATSONX_KEY")
+        keys["APIKEY"] = os.getenv("APIKEY")
+
         return keys
 
     # -----------------------------------------------------------
@@ -65,6 +70,11 @@ class KeyChain:
         keys["FIREBASE_CLIENT_EMAIL"] = st.secrets.get("FIREBASE_CLIENT_EMAIL")
         keys["FIREBASE_PRIVATE_KEY"] = st.secrets.get("FIREBASE_PRIVATE_KEY")
         keys["FIREBASE_PROJECT_ID"] = st.secrets.get("FIREBASE_PROJECT_ID")
+
+        # Common custom entries (include WATSONX keys)
+        keys["WATSONX_APIKEY"] = st.secrets.get("WATSONX_APIKEY")
+        keys["WATSONX_KEY"] = st.secrets.get("WATSONX_KEY")
+        keys["APIKEY"] = st.secrets.get("APIKEY")
 
         return keys
 

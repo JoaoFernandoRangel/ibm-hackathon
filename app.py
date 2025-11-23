@@ -5,22 +5,14 @@ import patient_form_page as form
 import dashboard_page as dash
 import lab_results_page as labs
 from src.Diary import DiaryAnalyzer
+from KeyChain import KeyChain
 project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
 
 
 
 # load apikey only if watsonx
-apikey = None
-apikey_path = os.path.join("segredos", "apikey.json")
-if os.path.exists(apikey_path):
-    try:
-        with open(apikey_path, "r", encoding="utf-8") as f:
-            apikey = json.load(f).get("apikey")
-    except Exception:
-        apikey = None
-    if not apikey:
-        st.warning("File `segredos/apikey.json` not found or invalid. Watsonx requires this key.")
-
+kc = KeyChain()
+apikey = kc.load_from_streamlit(st).get("WATSONX_APIKEY")
 an = DiaryAnalyzer(backend="watsonx", watsonx_api_key=apikey, watsonx_project_id=project_id)
 
 # --- Credenciais hardcoded ---

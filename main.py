@@ -2,8 +2,6 @@ import json
 from src.Diary import DiaryAnalyzer
 import time
 import streamlit as st
-#API Mudar para st.secrets
-from segredos.watson_api import project_id
 import KeyChain
 def print_menu():
     print("\n========================================")
@@ -34,7 +32,7 @@ def escolher_backend():
 
 
 def main():
-    #a chave está em segredos/apikey.json devo puxar o campo apikey
+    
     #API Mudar para st.secrets
 
     kc = KeyChain()

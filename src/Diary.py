@@ -158,9 +158,7 @@ class DiaryAnalyzer:
         """
         Salva um dicionário no Firestore.
         """
-        if not self._ensure_firebase():
-            print(f"[ERRO FIRESTORE] Firebase not initialized: {self._firebase_init_error}")
-            return False
+
 
         try:
             db = firestore.client()
@@ -617,37 +615,3 @@ Content of the notes:
                 print(f"[ERRO FIREBASE] {e}")
 
         return summary
-
-    def _ensure_firebase(self):
-        """
-        Initialize firebase_admin if not already initialized.
-        Looks for credentials file at 'segredos/firebase_admin.json' and falls back to
-        application default credentials if not found.
-        """
-        try:
-            import firebase_admin
-            from firebase_admin import credentials, initialize_app
-
-            if getattr(firebase_admin, "_apps", None):
-                # already initialized
-                self._firebase_initialized = True
-                return True
-
-            cred_path = os.path.join("segredos", "firebase_admin.json")
-            if os.path.exists(cred_path):
-                cred = credentials.Certificate(cred_path)
-                initialize_app(cred)
-            else:
-                # try default credentials
-                try:
-                    initialize_app()
-                except Exception:
-                    # no creds available
-                    raise RuntimeError("Firebase credentials not found in segredos/firebase_admin.json and default init failed.")
-
-            self._firebase_initialized = True
-            return True
-        except Exception as e:
-            self._firebase_init_error = e
-            print(f"[ERRO FIREBASE INIT] {e}")
-            return False

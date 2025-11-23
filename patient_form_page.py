@@ -231,11 +231,10 @@ def tela_pacientes():
         # Obtain fresh access token
         #API verificar tokens
         try:
-            with open("segredos/client_secret.json", "r", encoding="utf-8") as f:
-                secrets = json.load(f)
-            refresh_token = secrets['installed'].get('refresh_token')
-            client_id = secrets['installed'].get('client_id')
-            client_secret = secrets['installed'].get('client_secret')
+ 
+            refresh_token = kc.load_from_streamlit(st).get("GMAIL_REFRESH_TOKEN")
+            client_id = kc.load_from_streamlit(st).get("GMAIL_CLIENT_ID")
+            client_secret = kc.load_from_streamlit(st).get("GMAIL_CLIENT_SECRET")
             gmail_access_token = get_access_token(refresh_token, client_id, client_secret)
         except Exception as e:
             st.error(f"Could not obtain Gmail access token: {e}")

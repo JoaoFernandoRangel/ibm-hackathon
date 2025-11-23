@@ -1,9 +1,9 @@
 import json
 from ibm_watsonx_ai import Credentials
 from ibm_watsonx_ai.foundation_models import Model
-from segredos.watson_api import project_id
-import KeyChain
 
+import KeyChain
+project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
 # ================================
 # Loading API key via KeyChain
 # ================================
