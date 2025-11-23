@@ -7,7 +7,7 @@ import dashboard_page as dash
 from src.Diary import DiaryAnalyzer
 project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
 
-st.title("Smart Clinic")
+st.title("xTeF Clinic")
 
 
 # --- Credenciais hardcoded ---
