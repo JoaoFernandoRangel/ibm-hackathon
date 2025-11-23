@@ -1,0 +1,20 @@
+{
+  "name": "text",
+  "age": "number",
+  "gender": "select:Male,Female,Other",
+  "height_cm": "number",
+  "weight_kg": "number",
+  "allergies": "text",
+  "current_medications": "text",
+  "past_illnesses": "text",
+  "family_medical_history": "text",
+  "surgeries_or_hospitalizations": "text",
+  "smoking_history": "select:Never,Former,Current",
+  "alcohol_consumption": "select:Never,Occasionally,Regularly",
+  "chief_complaint": "text",
+  "pain_scale_0_to_10": "number",
+  "symptoms_description": "text",
+  "chronic_conditions": "text",
+  "exercise_frequency": "select:None,1-2 times/week,3-5 times/week,Daily",
+  "diet_description": "text"
+}

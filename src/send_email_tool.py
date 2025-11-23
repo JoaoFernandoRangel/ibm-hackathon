@@ -90,3 +90,20 @@ def send_gmail_email_with_ics(input: GmailSendWithAttachmentInput) -> str:
     service.users().messages().send(userId='me', body={'raw': raw}).execute()
 
     return input.subject
+
+def get_access_token(refresh_token, client_id, client_secret):
+    token_uri = "https://oauth2.googleapis.com/token"
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "client_id": client_id,
+        "client_secret": client_secret
+    }
+    response = requests.post(token_uri, headers=headers, data=data)
+    if response.status_code == 200:
+        return response.json()["access_token"]
+    else:
+        return None

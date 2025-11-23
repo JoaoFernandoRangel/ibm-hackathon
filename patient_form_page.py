@@ -5,8 +5,11 @@ import os
 from datetime import datetime, time, timedelta
 from src.triage import assess_risk
 from src.Diary import DiaryAnalyzer
-from segredos.watson_api import project_id
+
 from src.orchestrate_tools import orchestrate_followup_workflow, OrchestrateFollowupInput
+
+
+project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
 # Schema fixo do formulário
 FORM_SCHEMA = {
     "name": "text",
@@ -30,7 +33,152 @@ FORM_SCHEMA = {
     "diet_description": "text"
 }
 
+import streamlit as st
+from src.Diary import DiaryAnalyzer
 
+def tela_pacientes():
+    import streamlit as st
+    import json
+    import base64
+    from datetime import datetime, timedelta
+    from your_module.gmail_tools import (
+        GmailSendInput,
+        send_gmail_email,
+        GmailSendWithAttachmentInput,
+        send_gmail_email_with_ics,
+        get_access_token
+    )
+    from src.send_email_tool import (
+    GmailSendInput,
+    send_gmail_email,
+    GmailSendWithAttachmentInput,
+    send_gmail_email_with_ics,
+    get_access_token
+)
+
+    from diary_analyzer import DiaryAnalyzer
+
+    st.title("👥 Lista de Pacientes")
+
+    an = DiaryAnalyzer()
+    pacientes = an.list_patients()
+
+    if "pac_selected" not in st.session_state:
+        st.session_state.pac_selected = None
+
+    lista = [f"{data.get('name','Sem nome')} <{email}>" for email, data in pacientes.items()]
+    emails = list(pacientes.keys())
+
+    escolhido = st.selectbox("Selecione o paciente:", lista)
+
+    if escolhido:
+        idx = lista.index(escolhido)
+        email_sel = emails[idx]
+        st.session_state.pac_selected = an.get_patient(email_sel)
+
+    if st.session_state.pac_selected:
+        st.subheader("📄 Dados completos do paciente")
+        st.json(st.session_state.pac_selected)
+
+    # -----------------------------
+    # Orchestration options
+    # -----------------------------
+    st.markdown("---")
+    st.write("### Actions / Follow-up Automation")
+
+    send_followup = st.checkbox("Send follow-up form link via email", value=False)
+    schedule_followup = st.checkbox("Schedule appointment (send calendar invite)", value=False)
+
+    followup_date = None
+    followup_time = None
+    if schedule_followup:
+        followup_date = st.date_input("Preferred follow-up date")
+        followup_time = st.time_input("Preferred time")
+
+    # Gmail Access token
+    gmail_access_token = st.text_input("Gmail OAuth access token", type="password")
+
+    # -----------------------------
+    # Envio de email de teste / follow-up
+    # -----------------------------
+    if st.button("Enviar email de teste para paciente selecionado"):
+
+        if not st.session_state.pac_selected:
+            st.warning("Selecione um paciente antes de enviar o email.")
+            return
+
+        paciente_data = st.session_state.pac_selected
+        nome_paciente = paciente_data.get("name", "Paciente")
+        email_dest = paciente_data.get("email", email_sel)  # fallback para chave do dict
+
+        if not gmail_access_token:
+            st.error("Informe o Gmail OAuth access token!")
+            return
+
+        # Montar email simples
+        assunto = f"Olá {nome_paciente}, teste de envio"
+        corpo = f"Olá {nome_paciente},\n\nEste é um email de teste enviado via Gmail API.\n\nAtenciosamente,\nClinica"
+
+        input_data = GmailSendInput(
+            to=email_dest,
+            subject=assunto,
+            body=corpo,
+            access_token=gmail_access_token
+        )
+
+        try:
+            result = send_gmail_email(input_data)
+            st.success(f"Email enviado com sucesso para {email_dest}!")
+            st.write("Assunto:", result)
+        except Exception as e:
+            st.error(f"Falha ao enviar email: {e}")
+
+    # -----------------------------
+    # ICS CALENDAR INVITE
+    # -----------------------------
+    if schedule_followup and st.button("Enviar convite de consulta"):
+        if not (followup_date and followup_time):
+            st.error("Selecione uma data e hora para a consulta.")
+            return
+
+        if not gmail_access_token:
+            st.error("Informe o Gmail OAuth access token!")
+            return
+
+        start_dt = datetime.combine(followup_date, followup_time)
+        end_dt = start_dt + timedelta(minutes=30)
+
+        start_iso = start_dt.strftime("%Y%m%dT%H%M%S")
+        end_iso = end_dt.strftime("%Y%m%dT%H%M%S")
+
+        ics_content = f"""BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:{start_iso}
+DTEND:{end_iso}
+SUMMARY:Follow-up Appointment
+DESCRIPTION:Scheduled follow-up consultation.
+END:VEVENT
+END:VCALENDAR
+"""
+        ics_b64 = base64.b64encode(ics_content.encode("utf-8")).decode("utf-8")
+
+        payload = GmailSendWithAttachmentInput(
+            to=email_dest,
+            subject="Your appointment",
+            body="Please find your calendar invitation attached.",
+            access_token=gmail_access_token,
+            attachment_bytes_base64=ics_b64,
+            attachment_filename="appointment.ics"
+        )
+
+        try:
+            send_gmail_email_with_ics(payload)
+            st.success("Appointment invite sent successfully!")
+        except Exception as e:
+            st.error(f"Failed to send calendar invite: {e}")
+
+    
 
 # --------------------------------------------------------------
 # MAIN PAGE FUNCTION
@@ -112,116 +260,28 @@ def generate_patient_intake_form(_schema: dict):
     # ==========================================================
     if submitted:
         st.session_state.patient_data = filled_data
-        st.success("✔ Information saved successfully!")
 
+        # ============================
+        # SALVAR PACIENTE NO FIREBASE
+        # ============================
+        try:
+            an = DiaryAnalyzer()   # backend default não importa para salvar no firebase
+            ok = an.save_patient(filled_data)
+
+            if ok:
+                st.success("✔ Patient information saved successfully to Firebase!")
+            else:
+                st.warning("⚠ Failed to save patient information to Firebase.")
+
+        except Exception as e:
+            st.error(f"Firebase error: {e}")
+
+        # Mostrar JSON salvo
         st.write("### Saved JSON:")
         st.json(filled_data)
 
-        # Post-save action options
-        st.markdown("---")
-        st.write("### Actions")
-        backend = st.selectbox("Backend for AI calls", ["watsonx", "local"], index=0)
-        save_fb = st.checkbox("Save pre-prontuario to Firebase (if configured)", value=False)
 
-        # Orchestration options
-        st.write("### Follow-up Automation")
-        patient_email_for_followup = st.text_input("Patient email for follow-up (used for sending invites)", value="")
-        if not patient_email_for_followup:
-            patient_email_for_followup = None
-        send_followup = st.checkbox("Send follow-up form link via email", value=False)
-        schedule_followup = st.checkbox("Schedule appointment (send calendar invite)", value=False)
-        followup_date = None
-        followup_time = None
-        if schedule_followup:
-            followup_date = st.date_input("Preferred follow-up date")
-            followup_time = st.time_input("Preferred time")
+        st.session_state.patient_data = filled_data
+        st.success("✔ Information saved successfully!")
 
-        # Access token for Gmail API (OAuth access token) — can also be provided via segredos
-        gmail_access_token = st.text_input("Gmail OAuth access token (for sending emails)", value="", type="password")
-
-        # Ler apikey quando necessário
-        apikey = None
-        apikey_path = os.path.join("segredos", "apikey.json")
-        if backend == "watsonx" and os.path.exists(apikey_path):
-            try:
-                with open(apikey_path, "r", encoding="utf-8") as f:
-                    apikey = json.load(f).get("apikey")
-            except Exception:
-                apikey = None
-
-        if st.button("Assess risk and generate pre-prontuario"):
-            # Risk assessment
-            with st.spinner("Assessing risk..."):
-                triage_result = assess_risk(filled_data, backend=backend, watsonx_api_key=apikey, watsonx_project_id=project_id)
-
-            st.subheader("Triage result")
-            st.json(triage_result)
-
-            # Generate pre-prontuario
-            with st.spinner("Generating pre-prontuario with Granite..."):
-                an = DiaryAnalyzer(backend=backend, watsonx_api_key=apikey, watsonx_project_id=project_id)
-                pre = an.generate_pre_prontuario(filled_data)
-
-            st.subheader("Pre-Prontuario (structured)")
-            st.json(pre)
-
-            # save to disk
-            try:
-                os.makedirs("results", exist_ok=True)
-                out_path = os.path.join("results", "pre_prontuario.json")
-                with open(out_path, "w", encoding="utf-8") as f:
-                    json.dump(pre, f, ensure_ascii=False, indent=2)
-                st.success(f"Pre-prontuario saved to: {out_path}")
-                # download
-                with open(out_path, "rb") as f:
-                    data = f.read()
-                st.download_button("Download pre_prontuario", data=data, file_name="pre_prontuario.json")
-            except Exception as e:
-                st.warning(f"Failed to save pre-prontuario: {e}")
-
-            # save to Firebase (via Diary.save_week_summary or save_page_result) — DiaryAnalyzer uses save_page_result internally
-            if save_fb:
-                try:
-                    an = DiaryAnalyzer(backend=backend, watsonx_api_key=apikey, watsonx_project_id=project_id)
-                    # save the pre-prontuario as a document
-                    an.save_json("pre_prontuario.json", json.dumps(pre, ensure_ascii=False, indent=2))
-                    st.info("Attempted to save to Firebase (if configured).")
-                except Exception as e:
-                    st.warning(f"Failed to send to Firebase: {e}")
-
-            # Orchestrate follow-up: send email and optionally schedule appointment
-            if send_followup or schedule_followup:
-                if not gmail_access_token:
-                    st.warning("Gmail access token is required to send follow-up emails. Provide it in the field above.")
-                else:
-                    form_link = "https://example.com/followup-form"  # TODO: replace with real hosted form URL
-                    followup_subject = "Please complete your follow-up form"
-                    followup_body_template = "Hello, please complete the follow-up form here: {form_link}\n\nBest regards, Clinic"
-
-                    start_iso = None
-                    end_iso = None
-                    if schedule_followup and followup_date and followup_time:
-                        dt = datetime.combine(followup_date, followup_time)
-                        start_iso = dt.replace(microsecond=0).isoformat() + 'Z'
-                        # default duration 30 minutes
-                        end_iso = (dt + timedelta(minutes=30)).replace(microsecond=0).isoformat() + 'Z'
-
-                    orch_input = OrchestrateFollowupInput(
-                        patient_email=patient_email_for_followup or filled_data.get('email') or filled_data.get('name') or 'patient@example.com',
-                        form_link=form_link,
-                        followup_subject=followup_subject,
-                        followup_body_template=followup_body_template,
-                        schedule=schedule_followup,
-                        start_iso=start_iso,
-                        end_iso=end_iso,
-                        organizer_email='clinic@example.com',
-                        access_token=gmail_access_token,
-                    )
-
-                    try:
-                        with st.spinner('Triggering follow-up orchestration...'):
-                            result = orchestrate_followup_workflow(orch_input)
-                        st.success('Orchestration completed (check logs or email).')
-                        st.json(result)
-                    except Exception as e:
-                        st.error(f'Failed to run orchestration: {e}')
+ 

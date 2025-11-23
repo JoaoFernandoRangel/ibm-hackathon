@@ -267,6 +267,81 @@ class DiaryAnalyzer:
             print(f"[ERRO FIRESTORE] {e}")
             return {}
 
+    # =====================================================
+    #  PACIENTES (CRUD SIMPLES)
+    # =====================================================
+    def save_patient(self, form_data: dict):
+        """
+        Salva dados do paciente na coleção 'pacientes'.
+        Usa o email como ID do documento.
+        """
+        try:
+            email = form_data.get("email")
+            if not email:
+                raise ValueError("O campo 'email' é obrigatório para salvar o paciente.")
+            
+            db = firestore.client()
+            db.collection("pacientes").document(email).set(form_data)
+            print(f"[🔥] Paciente salvo: pacientes/{email}")
+            return True
+
+        except Exception as e:
+            print(f"[ERRO SAVE_PATIENT] {e}")
+            return False
+
+
+    def get_patient(self, email: str):
+        """
+        Busca documento completo do paciente pelo email.
+        """
+        try:
+            db = firestore.client()
+            doc = db.collection("pacientes").document(email).get()
+
+            if doc.exists:
+                print(f"[🔥] Paciente encontrado: {email}")
+                return doc.to_dict()
+            else:
+                print(f"[!] Paciente NÃO encontrado: {email}")
+                return None
+
+        except Exception as e:
+            print(f"[ERRO GET_PATIENT] {e}")
+            return None
+
+
+    def query_patient_by_name(self, name: str):
+        """
+        Busca paciente(s) pelo nome exato.
+        """
+        try:
+            db = firestore.client()
+            docs = db.collection("pacientes").where("name", "==", name).stream()
+            results = [d.to_dict() for d in docs]
+
+            print(f"[🔥] {len(results)} pacientes encontrados com o nome '{name}'")
+            return results
+        except Exception as e:
+            print(f"[ERRO QUERY_BY_NAME] {e}")
+            return []
+
+
+    def list_patients(self):
+        """
+        Lista todos os pacientes registrados.
+        """
+        try:
+            db = firestore.client()
+            docs = db.collection("pacientes").stream()
+
+            output = {doc.id: doc.to_dict() for doc in docs}
+            print(f"[🔥] {len(output)} pacientes encontrados no Firebase")
+
+            return output
+
+        except Exception as e:
+            print(f"[ERRO LIST_PATIENTS] {e}")
+            return {}
 
     # =====================================================
     #  PIPELINE PRINCIPAL
@@ -309,6 +384,76 @@ class DiaryAnalyzer:
         save_week_summary(summary)
 
         print("\n✓ Processamento concluído!\nJSONs salvos em:", self.results_path)
+
+    # =====================================================
+    #  CARREGAR TODOS OS DADOS DE UM PACIENTE
+    # =====================================================
+    def get_all_patient_records(self, email: str) -> dict:
+        """
+        Retorna todos os documentos no Firebase que pertencem ao paciente:
+        - pacientes/{email}
+        - paginas/...
+        - resumo_semana/...
+        - pre_prontuario/...
+        """
+        try:
+            db = firestore.client()
+            data = {}
+
+            # 1) Dados do paciente
+            doc = db.collection("pacientes").document(email).get()
+            if doc.exists:
+                data["perfil"] = doc.to_dict()
+
+            # 2) Páginas e análises individuais
+            pages = db.collection("paginas").where("email", "==", email).stream()
+            data["paginas"] = [p.to_dict() for p in pages]
+
+            # 3) Resumo de semana
+            summaries = db.collection("resumos_semana").where("email", "==", email).stream()
+            data["resumos_semana"] = [s.to_dict() for s in summaries]
+
+            # 4) Pre-prontuário
+            pronts = db.collection("pre_prontuario").where("email", "==", email).stream()
+            data["pre_prontuario"] = [p.to_dict() for p in pronts]
+
+            return data
+
+        except Exception as e:
+            print(f"[ERRO get_all_patient_records] {e}")
+            return {}
+    
+    def merge_patient_records_as_text(self, records: dict) -> str:
+        """
+        Converte todos os JSONs do paciente em um único texto estruturado
+        para o Granite processar.
+        """
+
+        combined = []
+
+        # Perfil
+        if "perfil" in records:
+            combined.append("=== PATIENT PROFILE ===\n")
+            combined.append(json.dumps(records["perfil"], indent=2, ensure_ascii=False))
+
+        # Diários / páginas
+        for p in records.get("paginas", []):
+            combined.append("\n=== PAGE ENTRY ===\n")
+            combined.append(json.dumps(p, indent=2, ensure_ascii=False))
+
+        # Pre-prontuário
+        for pr in records.get("pre_prontuario", []):
+            combined.append("\n=== PRE-PRONTUARIO ===\n")
+            combined.append(json.dumps(pr, indent=2, ensure_ascii=False))
+
+        # Resumo de semana
+        for rs in records.get("resumos_semana", []):
+            combined.append("\n=== WEEK SUMMARY ===\n")
+            combined.append(json.dumps(rs, indent=2, ensure_ascii=False))
+
+        return "\n\n".join(combined)
+
+
 
     # =====================================================
     # SUMARIZAÇÃO DO CASO CLÍNICO (USANDO GRANITE)
@@ -387,13 +532,57 @@ Content of the notes:
                 return ""
 
 
-    def summarize_case(self, save_to_file: bool = True, save_to_firebase: bool = True, page_names: list | None = None, tone: str | None = None, custom_prompt: str | None = None) -> str:
+    def summarize_case(self, save_to_file: bool = True, save_to_firebase: bool = True, page_names: list | None = None, tone: str | None = None, custom_prompt: str | None = None, patient_data: dict | None = None) -> str:
         """Agrega as páginas (ou usa `page_names`) e gera um resumo clínico usando Granite.
 
         - `page_names`: lista de arquivos em `database/` (ex: ["diario1.txt"]). Se None, usa todas.
+        - `patient_data`: dict com dados do formulário — se fornecido, usa ESSAS informações para gerar o resumo (PRIORITÁRIO).
         - Retorna o texto do resumo.
         """
 
+        # Se o médico forneceu dados do formulário, usar isso (prioridade)
+        if patient_data:
+            # Monta um texto objetivo a partir do formulário para alimentar o modelo
+            parts = []
+            parts.append("Patient form data (structured):")
+            for k, v in patient_data.items():
+                parts.append(f"{k}: {v}")
+            combined_text = "\n".join(parts)
+
+            # Contextual hint: pedir foco clínico objetivo a partir dos dados fornecidos
+            prompt_intro = (
+                "You are an experienced clinical assistant. Using ONLY the patient form data below, "
+                "generate an objective clinical summary including: brief identification, chief complaint, HPI, "
+                "relevant findings, diagnostic impression and brief recommendations. Do not invent additional history."
+                "\n\nPatient form data:\n"
+            )
+
+            full_prompt = prompt_intro + combined_text
+
+            print("[🔎] Generating clinical summary from patient form data with Granite...")
+            summary = self.generate_summary_from_text(full_prompt, max_new_tokens=1024, tone=tone, custom_prompt=custom_prompt)
+
+            # Save to file
+            if save_to_file:
+                os.makedirs(self.results_path, exist_ok=True)
+                out_path = os.path.join(self.results_path, "resumo_clinico_from_form.txt")
+                with open(out_path, "w", encoding="utf-8") as f:
+                    f.write(summary)
+                print(f"[💾] Summary (form) saved to: {out_path}")
+
+            # Save to Firebase (optional)
+            if save_to_firebase:
+                try:
+                    save_week_summary({"resumo_clinico_from_form": summary})
+                    print("[🔥] Clinical summary (form) sent to Firebase (if configured).")
+                except Exception as e:
+                    print(f"[ERRO FIREBASE] {e}")
+
+            return summary
+
+        # ----------------------------
+        # Fallback: comportamento anterior que usa páginas em database/
+        # ----------------------------
         # Carrega páginas
         if page_names is None:
             pages = self.load_pages()
@@ -441,86 +630,3 @@ Content of the notes:
                 print(f"[ERRO FIREBASE] {e}")
 
         return summary
-
-    def generate_pre_prontuario(self, form_data: dict, page_names: list | None = None, tone: str | None = None, custom_prompt: str | None = None) -> dict:
-        """Gera um pré-prontuário estruturado (JSON) e uma narrativa a partir dos dados do formulário e páginas.
-
-        Retorna um dicionário com chaves: `pre_prontuario` (dict) e `narrative` (string).
-        """
-
-        # Agrega páginas, se houver
-        pages = {}
-        if page_names is None:
-            pages = self.load_pages()
-        else:
-            for n in page_names:
-                p = os.path.join(self.database_path, n)
-                try:
-                    with open(p, "r", encoding="utf-8") as f:
-                        pages[n] = f.read()
-                except FileNotFoundError:
-                    continue
-
-        # Build prompt that instructs the model to return JSON
-        prompt = """
-You are an experienced clinical assistant. You will receive two inputs: (1) triage form data in key:value format and (2) past notes/tests.
-Based on this information, generate a JSON object with the fields:
-
-{
-    "pre_prontuario": {
-        "nome": "",
-        "idade": "",
-        "sexo": "",
-        "queixa_principal": "",
-        "historia_doenca_atual": "",
-        "comorbidades": [],
-        "medicacoes": [],
-        "alergias": [],
-        "exames_relevantes": []
-    },
-    "narrative": "concise objective narrative text"
-}
-
-Return ONLY valid JSON.
-"""
-
-        # Anexa form_data e conteúdo das páginas
-        prompt += "\n\nFORM DATA:\n"
-        for k, v in form_data.items():
-            prompt += f"{k}: {v}\n"
-
-        if pages:
-            prompt += "\n\nEXISTING PAGES:\n"
-            for name, text in pages.items():
-                prompt += f"--- {name} ---\n{text}\n"
-
-        # Gera texto com o backend configurado
-        generated = self.generate_summary_from_text(prompt, max_new_tokens=512, tone=tone, custom_prompt=custom_prompt)
-
-        # Tenta extrair JSON do output
-        try:
-            import json as _json
-            ini = generated.find("{")
-            end = generated.rfind("}")
-            if ini != -1 and end != -1:
-                jtext = generated[ini:end+1]
-                data = _json.loads(jtext)
-                return data
-        except Exception:
-            pass
-
-        # Fallback: retorna algo mínimo
-        return {
-            "pre_prontuario": {
-                "nome": form_data.get("name", ""),
-                "idade": form_data.get("age", ""),
-                "sexo": form_data.get("gender", ""),
-                "queixa_principal": form_data.get("chief_complaint", ""),
-                "historia_doenca_atual": form_data.get("symptoms_description", ""),
-                "comorbidades": [x.strip() for x in str(form_data.get("chronic_conditions", "")).split(",") if x.strip()],
-                "medicacoes": [x.strip() for x in str(form_data.get("current_medications", "")).split(",") if x.strip()],
-                "alergias": [x.strip() for x in str(form_data.get("allergies", "")).split(",") if x.strip()],
-                "exames_relevantes": []
-            },
-            "narrative": generated
-        }
