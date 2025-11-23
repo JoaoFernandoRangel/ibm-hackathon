@@ -41,22 +41,18 @@ def tela_pacientes():
     import json
     import base64
     from datetime import datetime, timedelta
-    from your_module.gmail_tools import (
-        GmailSendInput,
-        send_gmail_email,
-        GmailSendWithAttachmentInput,
-        send_gmail_email_with_ics,
-        get_access_token
-    )
+    from src.read_replies_tool import GmailReadRepliesInput, read_replies
+
+ 
     from src.send_email_tool import (
     GmailSendInput,
     send_gmail_email,
     GmailSendWithAttachmentInput,
     send_gmail_email_with_ics,
     get_access_token
-)
+    )
 
-    from diary_analyzer import DiaryAnalyzer
+    from src.Diary import DiaryAnalyzer
 
     st.title("👥 Lista de Pacientes")
 
@@ -81,6 +77,52 @@ def tela_pacientes():
         st.json(st.session_state.pac_selected)
 
     # -----------------------------
+    # Mostrar última resposta do paciente (se houver)
+    # -----------------------------
+    st.markdown("### 💬 Última resposta do paciente (via email)")
+
+    try:
+        # Carregar segredos
+        with open("segredos/client_secret.json", "r", encoding="utf-8") as f:
+            secrets = json.load(f)
+
+        refresh_token = secrets['installed']['refresh_token']
+        client_id = secrets['installed']['client_id']
+        client_secret = secrets['installed']['client_secret']
+
+        # Obter novo access token
+        access_token = get_access_token(refresh_token, client_id, client_secret)
+
+        if not isinstance(access_token, str) or not access_token:
+            st.warning("⚠️ Não foi possível obter o access token para buscar respostas.")
+        else:
+            # O assunto que você enviou no follow-up
+            # -> Caso queira unificar, coloque o mesmo assunto sempre
+            assunto_respostas = f"Olá {st.session_state.pac_selected.get('name','Paciente')}, teste de envio"
+
+            # Preparar input para a ferramenta
+            input_data = GmailReadRepliesInput(
+                access_token=access_token,
+                subject=assunto_respostas
+            )
+
+            # Ler respostas
+            respostas = read_replies(input_data)
+
+            if respostas:
+                ultima = respostas[-1]  # pega a mais recente
+                st.text_area(
+                    "Resposta mais recente:",
+                    ultima,
+                    height=200
+                )
+            else:
+                st.info("Nenhuma resposta encontrada para este paciente.")
+    except Exception as e:
+        st.error(f"Erro ao buscar respostas: {e}")
+
+
+    # -----------------------------
     # Orchestration options
     # -----------------------------
     st.markdown("---")
@@ -95,8 +137,7 @@ def tela_pacientes():
         followup_date = st.date_input("Preferred follow-up date")
         followup_time = st.time_input("Preferred time")
 
-    # Gmail Access token
-    gmail_access_token = st.text_input("Gmail OAuth access token", type="password")
+     
 
     # -----------------------------
     # Envio de email de teste / follow-up
@@ -110,14 +151,58 @@ def tela_pacientes():
         paciente_data = st.session_state.pac_selected
         nome_paciente = paciente_data.get("name", "Paciente")
         email_dest = paciente_data.get("email", email_sel)  # fallback para chave do dict
+        # Gmail Access token  
 
-        if not gmail_access_token:
-            st.error("Informe o Gmail OAuth access token!")
+        try:
+            with open("segredos/client_secret.json", "r", encoding="utf-8") as f:
+                secrets = json.load(f)
+            refresh_token = secrets['installed'].get('refresh_token')
+            client_id = secrets['installed'].get('client_id')
+            client_secret = secrets['installed'].get('client_secret')
+        except Exception as e:
+            st.error(f"Could not read segredos/client_secret.json: {e}")
+            return
+
+        # exchange refresh token for a fresh access token (string)
+        try:
+            gmail_access_token = get_access_token(refresh_token, client_id, client_secret)
+        except Exception as e:
+            st.error(f"Failed to obtain Gmail access token: {e}")
+            return
+
+        if not isinstance(gmail_access_token, str) or not gmail_access_token:
+            st.error("Could not obtain a valid Gmail access token. Check segredos/client_secret.json and network.")
             return
 
         # Montar email simples
         assunto = f"Olá {nome_paciente}, teste de envio"
-        corpo = f"Olá {nome_paciente},\n\nEste é um email de teste enviado via Gmail API.\n\nAtenciosamente,\nClinica"
+        corpo = f"""Hello, this is a periodic follow-up form to help monitor the patient’s health.
+
+            Are you feeling any discomfort or unusual symptoms in the past few days?
+
+            Has your blood pressure been high, low, or normal recently?
+
+            Have you experienced headaches, dizziness, or fatigue in the past few weeks?
+
+            Are you taking your medication correctly every day?
+
+            Have you had shortness of breath, swelling, or chest pain?
+            How has your sleep been? 
+
+            Have you been sleeping well?
+
+            Have you noticed any change in appetite or weight?
+
+            How would you describe your level of stress or anxiety lately?
+
+            Have you had any falls, loss of balance, or difficulty moving around?
+
+
+
+
+
+            Sincerely,
+            XteF Clinic"""
 
         input_data = GmailSendInput(
             to=email_dest,
@@ -141,8 +226,20 @@ def tela_pacientes():
             st.error("Selecione uma data e hora para a consulta.")
             return
 
-        if not gmail_access_token:
-            st.error("Informe o Gmail OAuth access token!")
+        # Obtain fresh access token
+        try:
+            with open("segredos/client_secret.json", "r", encoding="utf-8") as f:
+                secrets = json.load(f)
+            refresh_token = secrets['installed'].get('refresh_token')
+            client_id = secrets['installed'].get('client_id')
+            client_secret = secrets['installed'].get('client_secret')
+            gmail_access_token = get_access_token(refresh_token, client_id, client_secret)
+        except Exception as e:
+            st.error(f"Could not obtain Gmail access token: {e}")
+            return
+
+        if not isinstance(gmail_access_token, str) or not gmail_access_token:
+            st.error("Could not obtain a valid Gmail access token for calendar invite.")
             return
 
         start_dt = datetime.combine(followup_date, followup_time)
@@ -284,4 +381,4 @@ def generate_patient_intake_form(_schema: dict):
         st.session_state.patient_data = filled_data
         st.success("✔ Information saved successfully!")
 
- 
+

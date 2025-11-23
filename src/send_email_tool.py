@@ -5,6 +5,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+import requests
 from pydantic import BaseModel
 from ibm_watsonx_orchestrate.agent_builder.tools import tool, ToolPermission
 import json
@@ -102,8 +103,34 @@ def get_access_token(refresh_token, client_id, client_secret):
         "client_id": client_id,
         "client_secret": client_secret
     }
-    response = requests.post(token_uri, headers=headers, data=data)
-    if response.status_code == 200:
-        return response.json()["access_token"]
+
+    # Prefer requests if available, else fallback to urllib
+    try:
+        import requests  # local import to avoid NameError if missing earlier
+    except Exception:
+        requests = None
+
+    if requests:
+        try:
+            response = requests.post(token_uri, headers=headers, data=data, timeout=10)
+            response.raise_for_status()
+            return response.json().get("access_token")
+        except Exception as e:
+            # include response text when available for debugging
+            msg = getattr(e, "response", None)
+            raise RuntimeError(f"Failed to obtain access token via requests: {e} {getattr(msg,'text', '')}")
     else:
-        return None
+        # Fallback using urllib
+        try:
+            import urllib.request
+            import urllib.parse
+            import json as _json
+
+            encoded = urllib.parse.urlencode(data).encode("utf-8")
+            req = urllib.request.Request(token_uri, data=encoded, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                body = resp.read().decode("utf-8")
+                parsed = _json.loads(body)
+                return parsed.get("access_token")
+        except Exception as e:
+            raise RuntimeError(f"Failed to obtain access token via urllib fallback: {e}")
