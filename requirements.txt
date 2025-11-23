@@ -11,3 +11,4 @@ sentencepiece
 google-api-python-client
 google-auth
 google-auth-oauthlib
+langchain_core
