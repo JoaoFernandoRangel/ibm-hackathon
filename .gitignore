@@ -1,6 +1,6 @@
 __pycache__/
 *.py[cod]
-segredos
+%gedos
 .venv/
 venv/
 env/
@@ -14,3 +14,4 @@ segredos/
 Thumbs.db
 .DS_Store
 diary_tests/
+.env

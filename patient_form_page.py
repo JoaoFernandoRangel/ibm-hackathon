@@ -4,9 +4,9 @@ import os
 from datetime import datetime, time, timedelta
 from src.triage import assess_risk
 from src.Diary import DiaryAnalyzer
-
+import streamlit as st
 from src.orchestrate_tools import orchestrate_followup_workflow, OrchestrateFollowupInput
-
+from KeyChain import KeyChain
 
 project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
 # Schema fixo do formulário
@@ -31,7 +31,8 @@ FORM_SCHEMA = {
     "exercise_frequency": "select:None,1-2 times/week,3-5 times/week,Daily",
     "diet_description": "text"
 }
-
+kc = KeyChain()
+keys = kc.load_from_env()
 import streamlit as st
 from src.Diary import DiaryAnalyzer
 
@@ -42,7 +43,7 @@ def tela_pacientes():
     from datetime import datetime, timedelta
     from src.read_replies_tool import GmailReadRepliesInput, read_replies
 
- 
+    #API verificar tokens
     from src.send_email_tool import (
     GmailSendInput,
     send_gmail_email,
@@ -80,15 +81,14 @@ def tela_pacientes():
     # -----------------------------
     st.markdown("### 💬 Latest patient reply (via email)")
     try:
-        # Carregar segredos
-        with open("segredos/client_secret.json", "r", encoding="utf-8") as f:
-            secrets = json.load(f)
+        
 
-        refresh_token = secrets['installed']['refresh_token']
-        client_id = secrets['installed']['client_id']
-        client_secret = secrets['installed']['client_secret']
+        refresh_token = keys["GMAIL_REFRESH_TOKEN"]
+        client_id = keys["GMAIL_CLIENT_ID"]
+        client_secret = keys["GMAIL_CLIENT_SECRET"]
 
         # Obter novo access token
+        #API mudar para st.secrets
         access_token = get_access_token(refresh_token, client_id, client_secret)
 
         if not isinstance(access_token, str) or not access_token:
@@ -149,16 +149,21 @@ def tela_pacientes():
         patient_data = st.session_state.pac_selected
         patient_name = patient_data.get("name", "Patient")
         email_dest = patient_data.get("email", email_sel)  # fallback to dict key
-        # Gmail Access token  
-
+        # Gmail Access token         
+        # API verificar tokens
         try:
-            with open("secrets/client_secret.json", "r", encoding="utf-8") as f:
-                secrets = json.load(f)
-            refresh_token = secrets['installed'].get('refresh_token')
-            client_id = secrets['installed'].get('client_id')
-            client_secret = secrets['installed'].get('client_secret')
+            
+
+            refresh_token = keys.get("GMAIL_REFRESH_TOKEN")
+            client_id = keys.get("GMAIL_CLIENT_ID")
+            client_secret = keys.get("GMAIL_CLIENT_SECRET")
+
+            # validação mínima
+            if not all([refresh_token, client_id, client_secret]):
+                raise ValueError("Missing Gmail OAuth credentials in st.secrets.")
+
         except Exception as e:
-            st.error(f"Could not read secrets/client_secret.json: {e}")
+            st.error(f"Could not load Gmail OAuth credentials from st.secrets: {e}")
             return
 
         # exchange refresh token for a fresh access token (string)
@@ -221,12 +226,12 @@ def tela_pacientes():
             return
 
         # Obtain fresh access token
+        #API verificar tokens
         try:
-            with open("segredos/client_secret.json", "r", encoding="utf-8") as f:
-                secrets = json.load(f)
-            refresh_token = secrets['installed'].get('refresh_token')
-            client_id = secrets['installed'].get('client_id')
-            client_secret = secrets['installed'].get('client_secret')
+ 
+            refresh_token = kc.load_from_env().get("GMAIL_REFRESH_TOKEN")
+            client_id = kc.load_from_env().get("GMAIL_CLIENT_ID")
+            client_secret = kc.load_from_env().get("GMAIL_CLIENT_SECRET")
             gmail_access_token = get_access_token(refresh_token, client_id, client_secret)
         except Exception as e:
             st.error(f"Could not obtain Gmail access token: {e}")

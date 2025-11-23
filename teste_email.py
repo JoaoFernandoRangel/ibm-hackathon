@@ -11,6 +11,8 @@ from ibm_watsonx_orchestrate.agent_builder.tools import tool, ToolPermission
 import requests
 from src.send_email_tool import GmailSendInput, send_gmail_email
 from src.read_replies_tool import read_replies
+import KeyChain
+import streamlit as st
 
 
 class GmailReadRepliesInput(BaseModel):
@@ -38,13 +40,18 @@ def get_access_token(refresh_token, client_id, client_secret):
 def main():
     assunto = "Joao"
     
-        
-    with open("segredos/client_secret.json", "r") as f:
-        secrets = json.load(f)
-    
-    refresh_token = secrets['installed']['refresh_token']
-    client_id = secrets['installed']['client_id']
-    client_secret = secrets['installed']['client_secret']
+    kc = KeyChain()
+    keys = kc.load_from_env()
+
+    refresh_token = keys["GMAIL_REFRESH_TOKEN"]
+    client_id = keys["GMAIL_CLIENT_ID"]
+    client_secret = keys["GMAIL_CLIENT_SECRET"]
+
+    access_token = get_access_token(
+        refresh_token,
+        client_id,
+        client_secret
+    )
     
     access_token = get_access_token(refresh_token, client_id, client_secret)
     
@@ -54,8 +61,7 @@ def main():
         resp = input()
         if resp == "1":
             input_data = GmailSendInput(
-                #TODO Remover email paulino
-                to='paulinopereirajr@gmail.com',
+                to='email-teste@gmail.com',
                 subject=assunto,
                 body='This is a test email.',
                 access_token=access_token

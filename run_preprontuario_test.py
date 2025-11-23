@@ -1,10 +1,12 @@
 import json, os
 from src.Diary import DiaryAnalyzer
-from segredos.watson_api import project_id
 
+from Keychain import KeyChain
+#API mudar para st.secrets
 # load apikey
-with open('segredos/apikey.json','r',encoding='utf-8') as f:
-    apikey = json.load(f).get('apikey')
+project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
+kc = KeyChain()
+apikey = kc.load_from_env().get("WATSONX_APIKEY")
 
 an = DiaryAnalyzer(backend='watsonx', watsonx_api_key=apikey, watsonx_project_id=project_id)
 
