@@ -1,26 +1,13 @@
-# interface
 streamlit
-
-# watsonx
 ibm-watsonx-ai
 ibm_watsonx_orchestrate
-
-
-# firebase
 firebase-admin
 matplotlib
-
-# utilidades
 bs4
 orjson
 pyyaml
 protobuf
 sentencepiece
-
-
-# acelerar inference (opcional)
-#xformers==0.0.25   # CUDA 12.1
-
 google-api-python-client
 google-auth
 google-auth-oauthlib
