@@ -1,3 +1,15 @@
-venv
 __pycache__/
+*.py[cod]
 segredos
+.venv/
+venv/
+env/
+.vscode/
+.idea/
+results/
+database/
+segredos/
+*.log
+*.sqlite
+Thumbs.db
+.DS_Store

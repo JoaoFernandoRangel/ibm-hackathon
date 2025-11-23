@@ -7,7 +7,7 @@ import os
 
 
 class CloudantDB:
-    """Backend NoSQL para salvar e consultar resultados usando IBM Cloudant."""
+    """NoSQL backend to save and query results using IBM Cloudant."""
 
     def __init__(
         self,
@@ -18,11 +18,11 @@ class CloudantDB:
         create_if_missing: bool = True
     ):
         """
-        Inicializa conexão com Cloudant.
-        - username: Usuário do Cloudant
-        - api_key: API Key ou Password
-        - url: URL do Cloudant (ex: https://<id>.cloudantnosqldb.appdomain.cloud )
-        - db_name: Nome do banco
+        Initialize connection to Cloudant.
+        - username: Cloudant username
+        - api_key: API key or password
+        - url: Cloudant URL (e.g. https://<id>.cloudantnosqldb.appdomain.cloud )
+        - db_name: database name
         """
 
         self.username = username
@@ -34,16 +34,16 @@ class CloudantDB:
             # Autenticação padrão (API Key)
             self.client = Cloudant(self.username, self.api_key, url=self.url, connect=True)
 
-            if create_if_missing and db_name not in self.client.all_dbs():
-                print(f"[🗄️] Criando database '{db_name}'...")
-                self.client.create_database(db_name)
+                if create_if_missing and db_name not in self.client.all_dbs():
+                    print(f"[🗄️] Creating database '{db_name}'...")
+                    self.client.create_database(db_name)
 
             self.db = self.client[db_name]
 
-            print("[☁️] Cloudant conectado com sucesso.")
+            print("[☁️] Cloudant connected successfully.")
 
         except CloudantException as e:
-            print("[ERRO] Falha ao conectar ao Cloudant")
+            print("[ERROR] Failed to connect to Cloudant")
             raise e
 
     # ---------------------------------------------------------
@@ -55,15 +55,15 @@ class CloudantDB:
         try:
             doc = self.db.get(doc_id)
             if doc:
-                print(f"[♻️] Atualizando documento: {doc_id}")
+                print(f"[♻️] Updating document: {doc_id}")
                 doc.update(data)
                 doc.save()
             else:
-                print(f"[💾] Criando novo documento: {doc_id}")
+                print(f"[💾] Creating new document: {doc_id}")
                 self.db.create_document({ "_id": doc_id, **data })
 
         except Exception as e:
-            print(f"[ERRO] Não foi possível salvar '{doc_id}': {e}")
+            print(f"[ERROR] Could not save '{doc_id}': {e}")
 
     def get(self, doc_id: str):
         """Recupera um documento pelo ID."""
@@ -73,7 +73,7 @@ class CloudantDB:
                 return dict(doc)
             return None
         except Exception as e:
-            print(f"[ERRO] Não foi possível recuperar '{doc_id}': {e}")
+            print(f"[ERROR] Could not retrieve '{doc_id}': {e}")
             return None
 
     def delete(self, doc_id: str):
@@ -82,16 +82,16 @@ class CloudantDB:
             doc = self.db.get(doc_id)
             if doc:
                 doc.delete()
-                print(f"[🗑️] Documento '{doc_id}' removido.")
+                print(f"[🗑️] Document '{doc_id}' removed.")
         except Exception as e:
-            print(f"[ERRO] Não foi possível deletar '{doc_id}': {e}")
+            print(f"[ERROR] Could not delete '{doc_id}': {e}")
 
     def list_all(self):
         """Lista todos os documentos do DB."""
         try:
             return [dict(self.db[d]) for d in self.db]
         except Exception as e:
-            print(f"[ERRO] Falha ao listar documentos: {e}")
+            print(f"[ERROR] Failed to list documents: {e}")
             return []
 
     # ---------------------------------------------------------
@@ -106,21 +106,21 @@ class CloudantDB:
             result = self.db.get_query_result(selector)
             return [r for r in result]
         except Exception as e:
-            print(f"[ERRO] Query falhou: {e}")
+            print(f"[ERROR] Query failed: {e}")
             return []
 
 
 from cloudant.client import Cloudant
 
-# Configuração do Cloudant
-username = "seu_username"
-api_key = "sua_chave_api"
-url = "https://seu_url.cloudant.com"
+# Cloudant configuration (example placeholders)
+username = "your_username"
+api_key = "your_api_key"
+url = "https://your_url.cloudant.com"
 
 # Cria uma instância do cliente Cloudant
 client = Cloudant(username, api_key, url=url)
 
-# Substitui o código que usa o Firebase pelo código que usa o Cloudant
+# Functions to replace Firebase usage with Cloudant
 def save_page_result(page_name, data):
     db = client["diary_data"]
     doc = db.get(page_name)

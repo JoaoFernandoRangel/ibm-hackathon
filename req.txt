@@ -4,14 +4,13 @@ streamlit
 # watsonx
 ibm-watsonx-ai
 ibm_watsonx_orchestrate
-orchestrate
+
 
 # firebase
 firebase-admin
 
 # utilidades
 bs4
-base64
 orjson
 pyyaml
 protobuf

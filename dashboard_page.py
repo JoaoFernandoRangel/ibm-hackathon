@@ -68,7 +68,7 @@ def generate_line_plot(df: pd.DataFrame, test_name: str):
 # ============================================================
 def dashboard_page():
     st.title("📊 Clinical Dashboard")
-    st.write("Visão geral dos exames processados")
+    st.write("Overview of processed lab results")
 
     # Converter FAKE_LAB_DATA em um único dataframe consolidado
     all_records = []
@@ -79,7 +79,7 @@ def dashboard_page():
 
     df = pd.DataFrame(all_records)
 
-    st.subheader("📈 Gráficos de Tendência dos Exames")
+    st.subheader("📈 Lab Test Trend Charts")
 
     # =======================================================
     # GRÁFICOS LADO A LADO — 2 por linha
@@ -103,11 +103,27 @@ def dashboard_page():
     # =======================================================
     # TABELAS — aparecem DEPOIS dos gráficos
     # =======================================================
-    st.subheader("📄 Tabelas Detalhadas por Categoria")
+    st.subheader("📄 Detailed Tables by Category")
 
     categories = df["category"].unique()
 
+    # Translate some common Portuguese category names to English for display
+    name_map = {
+        "Hemograma": "Hematology",
+        "Bioquímica": "Biochemistry",
+        "Lipidograma": "Lipid Panel"
+    }
+
     for cat in categories:
-        st.markdown(f"### 🧪 {cat}")
+        display_cat = name_map.get(cat, cat)
+        st.markdown(f"### 🧪 {display_cat}")
         cat_df = df[df["category"] == cat].copy()
-        st.dataframe(cat_df, use_container_width=True)
+        st.dataframe(cat_df, width='stretch')
+
+
+def lab_dashboard_page():
+    """Compat shim: manter nome antigo `lab_dashboard_page` usado em app.py.
+
+    Apenas repassa a chamada para `dashboard_page()` para retrocompatibilidade.
+    """
+    return dashboard_page()

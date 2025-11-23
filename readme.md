@@ -1,3 +1,58 @@
+Como usar a automação de follow-up e agendamento (Gmail + IBM Orchestrate)
+-------------------------------------------------------------------
+
+1) Visão geral
+
+- O projeto inclui ferramentas para: enviar e-mails (Gmail API), enviar e-mails com anexo `.ics` (convite de calendário) e um fluxo composto `orchestrate_followup_workflow` que envia um link de follow-up e opcionalmente agenda um compromisso via anexo ICS.
+
+2) Requisitos
+
+- Python 3.10+ com dependências instaladas (use o `requirements.txt`).
+- Uma credencial OAuth do Google (token de acesso com escopo `https://www.googleapis.com/auth/gmail.send`) para enviar e-mails via Gmail API.
+- (Opcional) Conta IBM e Orchestrate para registrar/expor as ferramentas como passos de automação.
+
+3) Como gerar um token de teste do Gmail (modo rápido para desenvolvimento)
+
+- Para testes rápidos, você pode usar o fluxo de credenciais de usuário com `google-auth-oauthlib`.
+- Crie um projeto no Google Cloud Console, habilite a API Gmail, crie credenciais OAuth do tipo "Desktop app" e faça o fluxo de autorização para obter um `access_token`.
+
+4) Rodar o demo localmente
+
+Ative o virtualenv e execute o script demo (substitua `ACCESS_TOKEN` em `scripts/demo_orchestrate.py`):
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python .\scripts\demo_orchestrate.py
+```
+
+4.1) Gerar token OAuth do Gmail automaticamente (script)
+
+- Coloque o arquivo `client_secret.json` (credenciais OAuth do tipo "Desktop app") em `segredos/client_secret.json`.
+- Execute este script para abrir o fluxo de autorização e salvar as credenciais em `segredos/gmail_credentials.json`:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python .\scripts\get_gmail_token.py
+```
+
+- Após a execução, copie o campo `token` do arquivo `segredos/gmail_credentials.json` e cole no campo "Gmail OAuth access token" na UI, ou mantenha o arquivo para uso programático.
+
+5) Expor as ferramentas para IBM Orchestrate
+
+- O módulo `src/orchestrate_tools.py` já exporta as funções decoradas com `@tool` do SDK `ibm_watsonx_orchestrate.agent_builder.tools`.
+- Para registrar essas ferramentas em um agente Orchestrate, use a API/AgentBuilder da IBM (consulte a documentação do IBM watsonx Orchestrate). Adicione um script de registro (exemplo em `scripts/register_orchestrate_agent.py`) que importe os tools e gere o manifesto do agente.
+
+6) Segurança
+
+- Nunca compartilhe tokens OAuth em canais públicos.
+- Para produção, use refresh tokens ou contas de serviço com OAuth adequadas e armazene credenciais com segurança (Key Vault/segredos).
+
+7) Próximos passos recomendados
+
+- Validar o fluxo de envio com uma conta de testes.
+- Implementar armazenamento seguro de tokens (`segredos/` atualmente usado para apikeys IBM).
+- Integrar o agente com IBM Orchestrate via Agent Builder seguindo a documentação oficial.
+
 // ...existing code...
 # 📘 Granite Diary Analyzer — README Oficial (versão atualizada)
 
@@ -431,15 +486,4 @@ Resumo semanal (exemplo):
 
 ---
 
-## ✔️ Pronto para hackathons!
-- modular
-- simples
-- fácil de ensinar
-- backend alternável
-- Firestore plugado
-- app Streamlit incluído
-
-Se quiser, posso:
-- gerar `main.py` de exemplo agora,
-- criar `src/firebase_db.py` se faltar,
-- ou produzir um diagrama/fluxograma.
+ma.
