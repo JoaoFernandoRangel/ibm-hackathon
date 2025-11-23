@@ -1,18 +1,34 @@
-streamlit 
-transformers 
-accelerate
-torch
+# interface
+streamlit
 
+# watsonx
 ibm-watsonx-ai
-tokenizers
-bitsandbytes
-xformers
+ibm_watsonx_orchestrate
 
-sentencepiece
-protobuf
-safetensors
 
-# Para JSON limpo e YAML
+# firebase
+firebase-admin
+
+# utilidades
+bs4
 orjson
 pyyaml
+protobuf
+sentencepiece
 
+# Granite local
+torch
+transformers
+tokenizers
+safetensors
+
+# quantização
+bitsandbytes
+accelerate
+
+# acelerar inference (opcional)
+#xformers==0.0.25   # CUDA 12.1
+
+google-api-python-client
+google-auth
+google-auth-oauthlib
