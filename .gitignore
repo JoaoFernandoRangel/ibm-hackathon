@@ -13,3 +13,4 @@ segredos/
 *.sqlite
 Thumbs.db
 .DS_Store
+diary_tests/

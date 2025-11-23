@@ -50,15 +50,11 @@ def main():
     
     if access_token:
         print("Token de acesso obtido com sucesso!")
-        
-
-        
-
-
         print("enviar(1) ou receber(2) email via Gmail API?")
         resp = input()
         if resp == "1":
             input_data = GmailSendInput(
+                #TODO Remover email paulino
                 to='paulinopereirajr@gmail.com',
                 subject=assunto,
                 body='This is a test email.',

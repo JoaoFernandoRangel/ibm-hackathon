@@ -1,5 +1,4 @@
 import streamlit as st
-import IA_interactions as ia
 import json
 import os
 from datetime import datetime, time, timedelta
@@ -54,7 +53,7 @@ def tela_pacientes():
 
     from src.Diary import DiaryAnalyzer
 
-    st.title("👥 Lista de Pacientes")
+    st.title("Patients list")
 
     an = DiaryAnalyzer()
     pacientes = an.list_patients()
@@ -62,10 +61,10 @@ def tela_pacientes():
     if "pac_selected" not in st.session_state:
         st.session_state.pac_selected = None
 
-    lista = [f"{data.get('name','Sem nome')} <{email}>" for email, data in pacientes.items()]
+    lista = [f"{data.get('name','Nameless')} <{email}>" for email, data in pacientes.items()]
     emails = list(pacientes.keys())
 
-    escolhido = st.selectbox("Selecione o paciente:", lista)
+    escolhido = st.selectbox("Choose a patient:", lista)
 
     if escolhido:
         idx = lista.index(escolhido)
@@ -73,14 +72,13 @@ def tela_pacientes():
         st.session_state.pac_selected = an.get_patient(email_sel)
 
     if st.session_state.pac_selected:
-        st.subheader("📄 Dados completos do paciente")
+        st.subheader("Selected patient data:")
         st.json(st.session_state.pac_selected)
 
     # -----------------------------
     # Mostrar última resposta do paciente (se houver)
     # -----------------------------
-    st.markdown("### 💬 Última resposta do paciente (via email)")
-
+    st.markdown("### 💬 Latest patient reply (via email)")
     try:
         # Carregar segredos
         with open("segredos/client_secret.json", "r", encoding="utf-8") as f:
@@ -142,25 +140,25 @@ def tela_pacientes():
     # -----------------------------
     # Envio de email de teste / follow-up
     # -----------------------------
-    if st.button("Enviar email de teste para paciente selecionado"):
+    if st.button("Send test email to selected patient"):
 
         if not st.session_state.pac_selected:
-            st.warning("Selecione um paciente antes de enviar o email.")
+            st.warning("Please select a patient before sending the email.")
             return
 
-        paciente_data = st.session_state.pac_selected
-        nome_paciente = paciente_data.get("name", "Paciente")
-        email_dest = paciente_data.get("email", email_sel)  # fallback para chave do dict
+        patient_data = st.session_state.pac_selected
+        patient_name = patient_data.get("name", "Patient")
+        email_dest = patient_data.get("email", email_sel)  # fallback to dict key
         # Gmail Access token  
 
         try:
-            with open("segredos/client_secret.json", "r", encoding="utf-8") as f:
+            with open("secrets/client_secret.json", "r", encoding="utf-8") as f:
                 secrets = json.load(f)
             refresh_token = secrets['installed'].get('refresh_token')
             client_id = secrets['installed'].get('client_id')
             client_secret = secrets['installed'].get('client_secret')
         except Exception as e:
-            st.error(f"Could not read segredos/client_secret.json: {e}")
+            st.error(f"Could not read secrets/client_secret.json: {e}")
             return
 
         # exchange refresh token for a fresh access token (string)
@@ -171,12 +169,12 @@ def tela_pacientes():
             return
 
         if not isinstance(gmail_access_token, str) or not gmail_access_token:
-            st.error("Could not obtain a valid Gmail access token. Check segredos/client_secret.json and network.")
+            st.error("Could not obtain a valid Gmail access token. Check secrets/client_secret.json and network.")
             return
 
-        # Montar email simples
-        assunto = f"Olá {nome_paciente}, teste de envio"
-        corpo = f"""Hello, this is a periodic follow-up form to help monitor the patient’s health.
+        # Compose simple email
+        subject = f"Hello {patient_name}, test email"
+        body = f"""Hello, this is a periodic follow-up form to help monitor the patient’s health.
 
             Are you feeling any discomfort or unusual symptoms in the past few days?
 
@@ -197,26 +195,22 @@ def tela_pacientes():
 
             Have you had any falls, loss of balance, or difficulty moving around?
 
-
-
-
-
             Sincerely,
-            XteF Clinic"""
+            XteF Clinic"""
 
         input_data = GmailSendInput(
             to=email_dest,
-            subject=assunto,
-            body=corpo,
+            subject=subject,
+            body=body,
             access_token=gmail_access_token
         )
 
         try:
             result = send_gmail_email(input_data)
-            st.success(f"Email enviado com sucesso para {email_dest}!")
-            st.write("Assunto:", result)
+            st.success(f"Email successfully sent to {email_dest}!")
+            st.write("Subject:", result)
         except Exception as e:
-            st.error(f"Falha ao enviar email: {e}")
+            st.error(f"Failed to send email: {e}")
 
     # -----------------------------
     # ICS CALENDAR INVITE
@@ -305,7 +299,7 @@ def generate_patient_intake_form(_schema: dict):
         st.info("Processing file with AI… (placeholder)")
 
         # FUTURE AUTOMATION: IA irá extrair dados
-        ai_suggestions = ia.process_text_with_ai(raw_text)
+        #ai_suggestions = ia.process_text_with_ai(raw_text)
 
     st.markdown("---")
     st.write("### Review and complete the form")

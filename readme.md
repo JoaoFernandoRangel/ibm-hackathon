@@ -1,489 +1,192 @@
-Como usar a automação de follow-up e agendamento (Gmail + IBM Orchestrate)
--------------------------------------------------------------------
+# 📘 xTeF Clinic
 
-1) Visão geral
+## Testing granite and text analysis.
 
-- O projeto inclui ferramentas para: enviar e-mails (Gmail API), enviar e-mails com anexo `.ics` (convite de calendário) e um fluxo composto `orchestrate_followup_workflow` que envia um link de follow-up e opcionalmente agenda um compromisso via anexo ICS.
+Tool for **automatic analysis of diary pages**, using **IBM Granite (local or Watsonx.ai)** and **Firestore (Firebase)** for storage.
 
-2) Requisitos
+Ideal for **hackathons**, **POCs**, and **quick NLP demonstrations**, with a simple, modular, and easy-to-test pipeline.
 
-- Python 3.10+ com dependências instaladas (use o `requirements.txt`).
-- Uma credencial OAuth do Google (token de acesso com escopo `https://www.googleapis.com/auth/gmail.send`) para enviar e-mails via Gmail API.
-- (Opcional) Conta IBM e Orchestrate para registrar/expor as ferramentas como passos de automação.
 
-3) Como gerar um token de teste do Gmail (modo rápido para desenvolvimento)
+## 📂 Project Structure
 
-- Para testes rápidos, você pode usar o fluxo de credenciais de usuário com `google-auth-oauthlib`.
-- Crie um projeto no Google Cloud Console, habilite a API Gmail, crie credenciais OAuth do tipo "Desktop app" e faça o fluxo de autorização para obter um `access_token`.
-
-4) Rodar o demo localmente
-
-Ative o virtualenv e execute o script demo (substitua `ACCESS_TOKEN` em `scripts/demo_orchestrate.py`):
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-python .\scripts\demo_orchestrate.py
-```
-
-4.1) Gerar token OAuth do Gmail automaticamente (script)
-
-- Coloque o arquivo `client_secret.json` (credenciais OAuth do tipo "Desktop app") em `segredos/client_secret.json`.
-- Execute este script para abrir o fluxo de autorização e salvar as credenciais em `segredos/gmail_credentials.json`:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-python .\scripts\get_gmail_token.py
-```
-
-- Após a execução, copie o campo `token` do arquivo `segredos/gmail_credentials.json` e cole no campo "Gmail OAuth access token" na UI, ou mantenha o arquivo para uso programático.
-
-5) Expor as ferramentas para IBM Orchestrate
-
-- O módulo `src/orchestrate_tools.py` já exporta as funções decoradas com `@tool` do SDK `ibm_watsonx_orchestrate.agent_builder.tools`.
-- Para registrar essas ferramentas em um agente Orchestrate, use a API/AgentBuilder da IBM (consulte a documentação do IBM watsonx Orchestrate). Adicione um script de registro (exemplo em `scripts/register_orchestrate_agent.py`) que importe os tools e gere o manifesto do agente.
-
-6) Segurança
-
-- Nunca compartilhe tokens OAuth em canais públicos.
-- Para produção, use refresh tokens ou contas de serviço com OAuth adequadas e armazene credenciais com segurança (Key Vault/segredos).
-
-7) Próximos passos recomendados
-
-- Validar o fluxo de envio com uma conta de testes.
-- Implementar armazenamento seguro de tokens (`segredos/` atualmente usado para apikeys IBM).
-- Integrar o agente com IBM Orchestrate via Agent Builder seguindo a documentação oficial.
-
-// ...existing code...
-# 📘 Granite Diary Analyzer — README Oficial (versão atualizada)
-
-Ferramenta de **análise automática de páginas de diário**, usando **IBM Granite (local ou Watsonx.ai)** e **armazenamento em Firestore (Firebase)**.
-
-Ideal para **hackathons**, **POCs** e **demonstrações rápidas de NLP**, com pipeline simples, modular e fácil de testar.
-
----
-
-## Estrutura do projeto (atual)
-
-```
+````
 database/
 results/
-segredos/
+secrets/
 src/
-    __init__.py
-    Diary.py
-    firebase_db.py
+**init**.py
+Diary.py
+firebase_db.py
 app.py
-main.py      ← (novo, criado conforme você pediu)
+main.py
 readme.md
 req.txt
 test_firebase.py
-```
+````
 
----
+## 🚀 Features
 
-## 🚀 Funcionalidades
+### 🔍 Automatic Extraction
 
-### 🔍 Extração automática
-Ao processar cada página, o sistema retorna:
-- Quantidade de menções de **tristeza**
-- Lista de **pessoas mencionadas**
-- Lista de **interações relevantes**
-- Lista de **sentimentos presentes**
-- JSON limpo e validado
+For each processed page, the system extracts:
 
-### 💾 Armazenamento integrado
-- **Firestore (Firebase)** com funções para:
-  - salvar resultado
-  - carregar documento
-  - consultar coleções
-  - buscar por campo
+- Number of **sadness** mentions  
+- List of **people mentioned**  
+- List of **relevant interactions**  
+- List of **emotions present**  
+- Clean and validated JSON output  
 
-### 🧠 Dois modos de execução
-- **Local** (Transformers + GPU)
-- **Watsonx.ai** (API Granite)
+### 💾 Integrated Storage
 
-### 🧱 Arquitetura simples
-Focada em permitir leitura fácil durante o hackathon.
+Using **Firestore (Firebase)**:
 
----
+- Save results  
+- Load documents  
+- Query collections  
+- Filter by field  
 
-## 📂 Estrutura atual do projeto (descrição)
-```
-project/
-│
-├── database/          # Arquivos .txt para analisar
-├── results/           # Resultados JSON salvos localmente
-├── segredos/          # firebase_key.json (não comitar)
-│
-├── src/
-│   ├── Diary.py       # Objeto principal — Granite + Watsonx + Firestore
-│   ├── firebase_db.py # Wrap do Firestore (salvar, ler, consultar)
-│   └── __init__.py
-│
-├── app.py             # Interface Streamlit (opcional)
-├── main.py            # NOVO: tutorial prático de uso para seu amigo
-├── test_firebase.py   # Testes isolados do Firestore
-├── req.txt            # Dependências
-└── readme.md          # Este arquivo
-```
+### 🧠 Two Execution Modes
 
----
+- **Local** (Transformers + GPU)  
+- **Watsonx.ai** (Granite API)
 
-## 🛠️ Instalação
+### 🧱 Simple Architecture
 
-No terminal (dentro do projeto):
+Focused on clarity and speed for hackathons and demos.
+
+## 🛠️ Installation
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r req.txt
+````
+
+Place your Firebase credentials at:
+
+```
+secrets/firebase_key.json
 ```
 
-Certifique-se de colocar sua chave:
-```
-segredos/firebase_key.json
-```
+## 🔧 Firebase Setup
 
----
+In `src/firebase_db.py`, initialize Firestore:
 
-## 🔧 Configurando o Firebase
-
-No `src/firebase_db.py` inclua algo como:
 ```python
 from firebase_admin import credentials, initialize_app
-cred = credentials.Certificate("segredos/firebase_key.json")
+cred = credentials.Certificate("secrets/firebase_key.json")
 initialize_app(cred)
 ```
 
-A **coleção padrão** usada é:
+Default collection:
+
 ```
 diary_results
 ```
 
----
+## 🧩 DiaryAnalyzer Overview
 
-## 🧩 Como o objeto Diary funciona
+The main class lives in `src/Diary.py` and provides:
 
-O arquivo `src/Diary.py` contém a classe principal `DiaryAnalyzer`, com:
-- backend: `"local"` ou `"watsonx"`
-- integração com Firestore
-- métodos:
-  - `load_model()` — carrega backend local ou Watsonx
-  - `extract(text)` — chama Granite para extrair informações
-  - `save_json(name, content)` — salva localmente
-  - `run_single_page(text, page_name)` — processa 1 página e salva no Firestore
-  - `run()` — processa toda a pasta `database/` e gera resumo semanal
-  - `get_document(collection, document_id)` — busca documento no Firestore
-  - `query_collection(collection, field, op, value)` — consulta com filtro
-  - `list_all(collection)` — lista todos os documentos de uma coleção
+* `load_model()` — loads Granite (local or Watsonx)
+* `extract(text)` — extracts structured data
+* `save_json(name, content)` — saves JSON locally
+* `run_single_page(text, page_name)` — processes one page + stores in Firestore
+* `run()` — processes all pages in `database/`
+* `get_document(collection, id)` — fetches a document
+* `query_collection(collection, field, op, value)` — filtered query
+* `list_all(collection)` — lists an entire collection
 
----
 
-## ▶️ Como rodar análises localmente
+## ▶️ Running the Analyzer
 
-Processar apenas 1 página:
+### Process one page:
+
 ```bash
-python3 main.py --page pagina1.txt
+python3 main.py --page page1.txt
 ```
 
-Processar tudo:
+### Process all pages:
+
 ```bash
 python3 main.py --all
 ```
 
-Usar Watsonx.ai:
+### Use Watsonx.ai backend:
+
 ```bash
 python3 main.py --backend watsonx
 ```
 
-(Se preferir, use também o CLI em test_firebase.py ou uma UI Streamlit se existir.)
+## 🆕 `main.py` — Demonstration Script
 
----
+The included `main.py` shows:
 
-## 🆕 main.py — Arquivo de demonstração
+* How to process one or multiple pages
+* How to store results in Firestore
+* How to query saved documents
+* How to list all entries
 
-O `main.py` proposto mostra como:
-- processar 1 página
-- processar todas as páginas
-- salvar resultados no Firebase
-- consultar e listar documentos
 
-(Quer que eu gere esse `main.py` de exemplo agora?)
+## 🧪 Testing Firestore
 
----
+Run isolated tests:
 
-## 🧪 Testando Firebase separadamente
-
-Executar:
 ```bash
 python3 test_firebase.py
 ```
-Inclui:
-- salvar página
-- ler documento
-- consultar coleção
 
----
+Covers:
 
-## 📦 Formato de saída
+* Save
+* Load
+* Query
 
-Exemplo de JSON gerado:
+
+## 📦 Output Examples
+
+### Page result:
+
 ```json
 {
-  "tristeza": 2,
-  "pessoas_mencionadas": ["Ana", "João"],
-  "interacoes": ["Conversa com João"],
-  "sentimentos": ["tristeza", "saudade"]
+  "sadness": 2,
+  "people_mentioned": ["Ana", "João"],
+  "interactions": ["Conversation with João"],
+  "emotions": ["sadness", "longing"]
 }
 ```
 
-Resumo semanal (exemplo):
+### Weekly summary:
+
 ```json
 {
-  "total_tristeza": 5,
-  "todas_pessoas": ["Ana", "João", "Marcos"],
-  "todas_interacoes": [
-    "Conversa com João",
-    "Discussão com Marcos"
+  "total_sadness": 5,
+  "all_people": ["Ana", "João", "Marcos"],
+  "all_interactions": [
+    "Conversation with João",
+    "Argument with Marcos"
   ]
 }
 ```
 
----
 
-## 🧑‍💻 Fluxo geral de uso
+## 🧑‍💻 Usage Workflow
 
-1. Colocar `.txt` em `database/`
-2. Rodar `main.py` (ou executar fluxo via Streamlit)
-3. JSON aparece em `results/`
-4. Também enviado ao Firestore
-5. Pode consultar via:
-   - Firebase Console
-   - `test_firebase.py`
-   - métodos em `src/firebase_db.py`
+1. Add `.txt` files to `database/`
+2. Run `main.py` (or Streamlit UI if using app.py)
+3. JSON outputs appear in `results/`
+4. Firestore automatically stores the processed data
+5. Query using:
 
----
+   * Firebase Console
+   * `test_firebase.py`
+   * Methods in `firebase_db.py`
 
-## ✔️ Pronto para hackathons!
-- modular
-- simples
-- fácil de ensinar
-- backend alternável
-- Firestore plugado
-- app Streamlit incluído
 
-Se quiser, posso:
-- gerar `main.py` de exemplo agora,
-- criar `src/firebase_db.py` se faltar,
-- ou produzir um diagrama/fluxograma.
-```// filepath: /hackaton/readme.md
-// ...existing code...
-# 📘 Granite Diary Analyzer — README Oficial (versão atualizada)
+## ✔️ Ready for Hackathons
 
-Ferramenta de **análise automática de páginas de diário**, usando **IBM Granite (local ou Watsonx.ai)** e **armazenamento em Firestore (Firebase)**.
-
-Ideal para **hackathons**, **POCs** e **demonstrações rápidas de NLP**, com pipeline simples, modular e fácil de testar.
-
----
-
-## Estrutura do projeto (atual)
-
-```
-database/
-results/
-segredos/
-src/
-    __init__.py
-    Diary.py
-    firebase_db.py
-app.py
-main.py      ← (novo, criado conforme você pediu)
-readme.md
-req.txt
-test_firebase.py
-```
-
----
-
-## 🚀 Funcionalidades
-
-### 🔍 Extração automática
-Ao processar cada página, o sistema retorna:
-- Quantidade de menções de **tristeza**
-- Lista de **pessoas mencionadas**
-- Lista de **interações relevantes**
-- Lista de **sentimentos presentes**
-- JSON limpo e validado
-
-### 💾 Armazenamento integrado
-- **Firestore (Firebase)** com funções para:
-  - salvar resultado
-  - carregar documento
-  - consultar coleções
-  - buscar por campo
-
-### 🧠 Dois modos de execução
-- **Local** (Transformers + GPU)
-- **Watsonx.ai** (API Granite)
-
-### 🧱 Arquitetura simples
-Focada em permitir leitura fácil durante o hackathon.
-
----
-
-## 📂 Estrutura atual do projeto (descrição)
-```
-project/
-│
-├── database/          # Arquivos .txt para analisar
-├── results/           # Resultados JSON salvos localmente
-├── segredos/          # firebase_key.json (não comitar)
-│
-├── src/
-│   ├── Diary.py       # Objeto principal — Granite + Watsonx + Firestore
-│   ├── firebase_db.py # Wrap do Firestore (salvar, ler, consultar)
-│   └── __init__.py
-│
-├── app.py             # Interface Streamlit (opcional)
-├── main.py            # NOVO: tutorial prático de uso para seu amigo
-├── test_firebase.py   # Testes isolados do Firestore
-├── req.txt            # Dependências
-└── readme.md          # Este arquivo
-```
-
----
-
-## 🛠️ Instalação
-
-No terminal (dentro do projeto):
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r req.txt
-```
-
-Certifique-se de colocar sua chave:
-```
-segredos/firebase_key.json
-```
-
----
-
-## 🔧 Configurando o Firebase
-
-No `src/firebase_db.py` inclua algo como:
-```python
-from firebase_admin import credentials, initialize_app
-cred = credentials.Certificate("segredos/firebase_key.json")
-initialize_app(cred)
-```
-
-A **coleção padrão** usada é:
-```
-diary_results
-```
-
----
-
-## 🧩 Como o objeto Diary funciona
-
-O arquivo `src/Diary.py` contém a classe principal `DiaryAnalyzer`, com:
-- backend: `"local"` ou `"watsonx"`
-- integração com Firestore
-- métodos:
-  - `load_model()` — carrega backend local ou Watsonx
-  - `extract(text)` — chama Granite para extrair informações
-  - `save_json(name, content)` — salva localmente
-  - `run_single_page(text, page_name)` — processa 1 página e salva no Firestore
-  - `run()` — processa toda a pasta `database/` e gera resumo semanal
-  - `get_document(collection, document_id)` — busca documento no Firestore
-  - `query_collection(collection, field, op, value)` — consulta com filtro
-  - `list_all(collection)` — lista todos os documentos de uma coleção
-
----
-
-## ▶️ Como rodar análises localmente
-
-Processar apenas 1 página:
-```bash
-python3 main.py --page pagina1.txt
-```
-
-Processar tudo:
-```bash
-python3 main.py --all
-```
-
-Usar Watsonx.ai:
-```bash
-python3 main.py --backend watsonx
-```
-
-(Se preferir, use também o CLI em test_firebase.py ou uma UI Streamlit se existir.)
-
----
-
-## 🆕 main.py — Arquivo de demonstração
-
-O `main.py` proposto mostra como:
-- processar 1 página
-- processar todas as páginas
-- salvar resultados no Firebase
-- consultar e listar documentos
-
-(Quer que eu gere esse `main.py` de exemplo agora?)
-
----
-
-## 🧪 Testando Firebase separadamente
-
-Executar:
-```bash
-python3 test_firebase.py
-```
-Inclui:
-- salvar página
-- ler documento
-- consultar coleção
-
----
-
-## 📦 Formato de saída
-
-Exemplo de JSON gerado:
-```json
-{
-  "tristeza": 2,
-  "pessoas_mencionadas": ["Ana", "João"],
-  "interacoes": ["Conversa com João"],
-  "sentimentos": ["tristeza", "saudade"]
-}
-```
-
-Resumo semanal (exemplo):
-```json
-{
-  "total_tristeza": 5,
-  "todas_pessoas": ["Ana", "João", "Marcos"],
-  "todas_interacoes": [
-    "Conversa com João",
-    "Discussão com Marcos"
-  ]
-}
-```
-
----
-
-## 🧑‍💻 Fluxo geral de uso
-
-1. Colocar `.txt` em `database/`
-2. Rodar `main.py` (ou executar fluxo via Streamlit)
-3. JSON aparece em `results/`
-4. Também enviado ao Firestore
-5. Pode consultar via:
-   - Firebase Console
-   - `test_firebase.py`
-   - métodos em `src/firebase_db.py`
-
----
-
-ma.
+* Modular
+* Easy to understand
+* Flexible (local or cloud Granite)
+* Integrated database
+* Perfect for demos and prototypes

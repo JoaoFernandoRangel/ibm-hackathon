@@ -2,8 +2,8 @@ import streamlit as st
 import json
 import os
 import patient_form_page as form
-import lab_results_page as labs
 import dashboard_page as dash
+import lab_results_page as labs
 from src.Diary import DiaryAnalyzer
 project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
 
