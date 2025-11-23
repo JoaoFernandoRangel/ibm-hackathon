@@ -52,7 +52,8 @@ if st.session_state.logged_in:
         st.write("Generate a structured summary and a narrative version of the clinical case using the patient's stored JSON records (NOT the free-text diaries).")
 
         c1, c2 = st.columns([2, 3])
-
+        
+        #TODO Vem aqui Paulino
         with c1:
             backend = st.selectbox("Backend", ["watsonx", "local"], index=0, key="smart_backend")
             model_tone = st.selectbox("Summary tone", ["Concise", "Detailed", "Clinical formal"], index=0, key="smart_tone")
