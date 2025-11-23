@@ -41,7 +41,7 @@ def main():
     assunto = "Joao"
     
     kc = KeyChain()
-    keys = kc.load_from_env()
+    keys = kc.load_from_streamlit()
 
     refresh_token = keys["GMAIL_REFRESH_TOKEN"]
     client_id = keys["GMAIL_CLIENT_ID"]

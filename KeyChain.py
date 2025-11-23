@@ -11,7 +11,7 @@ class KeyChain:
     # -----------------------------------------------------------
     # 1) Buscar tudo do .env
     # -----------------------------------------------------------
-    def load_from_env(self):
+    def load_from_streamlit(self):
         keys = {}
 
         # Gmail OAuth
@@ -81,7 +81,7 @@ class KeyChain:
 '''
 Exemplo de uso:
 kc = KeyChain(".env")
-keys = kc.load_from_env()
+keys = kc.load_from_streamlit()
 print(keys["GMAIL_CLIENT_ID"])
 
 #Ou, para Streamlit:

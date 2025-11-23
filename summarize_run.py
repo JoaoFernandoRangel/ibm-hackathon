@@ -9,7 +9,7 @@ project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
 def load_apikey():
     from KeyChain import KeyChain
     kc = KeyChain()
-    keys = kc.load_from_env(st)
+    keys = kc.load_from_streamlit(st)
     return keys.get("WATSONX_APIKEY")
 
 

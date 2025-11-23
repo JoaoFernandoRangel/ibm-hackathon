@@ -32,7 +32,7 @@ FORM_SCHEMA = {
     "diet_description": "text"
 }
 kc = KeyChain()
-keys = kc.load_from_env()
+keys = kc.load_from_streamlit()
 import streamlit as st
 from src.Diary import DiaryAnalyzer
 
@@ -229,9 +229,9 @@ def tela_pacientes():
         #API verificar tokens
         try:
  
-            refresh_token = kc.load_from_env().get("GMAIL_REFRESH_TOKEN")
-            client_id = kc.load_from_env().get("GMAIL_CLIENT_ID")
-            client_secret = kc.load_from_env().get("GMAIL_CLIENT_SECRET")
+            refresh_token = kc.load_from_streamlit().get("GMAIL_REFRESH_TOKEN")
+            client_id = kc.load_from_streamlit().get("GMAIL_CLIENT_ID")
+            client_secret = kc.load_from_streamlit().get("GMAIL_CLIENT_SECRET")
             gmail_access_token = get_access_token(refresh_token, client_id, client_secret)
         except Exception as e:
             st.error(f"Could not obtain Gmail access token: {e}")
