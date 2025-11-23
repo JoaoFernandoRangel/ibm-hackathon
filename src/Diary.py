@@ -1,14 +1,14 @@
 import os
 import json
-import torch
+import uuid
+
 
 # Watsonx
 from ibm_watsonx_ai import Credentials
 from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
 
-# Local Granite
-from transformers import AutoTokenizer, AutoModelForCausalLM
+
 # Adicione essencialmente APÓS seus imports:
 from src.firebase_db import save_page_result, save_week_summary
 from firebase_admin import credentials, firestore, initialize_app
@@ -17,7 +17,6 @@ from firebase_admin import credentials, firestore, initialize_app
 
 
 class DiaryAnalyzer:
-
     def __init__(
         self,
         backend="local",
@@ -36,11 +35,9 @@ class DiaryAnalyzer:
         self.backend = backend
         self.database_path = database_path
         self.results_path = results_path
-
-        # LOCAL
-        self.local_model_name = local_model_name
-        self.local_tokenizer = None
-        self.local_model = None
+        # Firebase init flag
+        self._firebase_initialized = False
+        self._firebase_init_error = None
 
         # WATSONX
         self.watsonx_model_name = watsonx_model
@@ -68,16 +65,8 @@ class DiaryAnalyzer:
     #  CARREGAMENTO DE MODELO
     # =====================================================
     def load_model(self):
-        if self.backend == "local":
-            print("[🔧] Carregando modelo local Granite...")
-            self.local_tokenizer = AutoTokenizer.from_pretrained(self.local_model_name)
-            self.local_model = AutoModelForCausalLM.from_pretrained(
-                self.local_model_name,
-                load_in_4bit=True,
-                device_map="cuda",
-                torch_dtype=torch.float16
-            )
-        elif self.backend == "watsonx":
+
+        if self.backend == "watsonx":
             print("[☁️] Conectando ao Watsonx.ai...")
             creds = Credentials(
                 url="https://us-south.ml.cloud.ibm.com",
@@ -134,32 +123,9 @@ class DiaryAnalyzer:
 
         prompt = self.template_prompt.format(texto=text)
 
-        # -------------- LOCAL --------------
-        if self.backend == "local":
 
-            inputs = self.local_tokenizer(
-                prompt,
-                return_tensors="pt",
-                truncation=True
-            )
-
-            inputs = {k: v.to("cuda") for k, v in inputs.items()}
-
-            output = self.local_model.generate(
-                **inputs,
-                max_new_tokens=160,
-                do_sample=False,
-                pad_token_id=self.local_tokenizer.eos_token_id
-            )
-
-            decoded = self.local_tokenizer.decode(output[0], skip_special_tokens=True)
-            return self.clean_json(decoded)
-
-        # -------------- WATSONX --------------
-        else:
-
-            response = self.watsonx_model.generate_text(prompt=prompt)
-            return self.clean_json(response)
+        response = self.watsonx_model.generate_text(prompt=prompt)
+        return self.clean_json(response)
 
     def run_single_page(self, text: str, page_name: str):
         """
@@ -192,12 +158,33 @@ class DiaryAnalyzer:
         """
         Salva um dicionário no Firestore.
         """
+        if not self._ensure_firebase():
+            print(f"[ERRO FIRESTORE] Firebase not initialized: {self._firebase_init_error}")
+            return False
+
         try:
             db = firestore.client()
+            if document_id is None:
+                # generate a safe random id
+                document_id = str(uuid.uuid4())
             db.collection(collection).document(document_id).set(data)
             print(f"[🔥] Documento salvo no Firestore: {collection}/{document_id}")
+            return True
         except Exception as e:
             print(f"[ERRO FIRESTORE] {e}")
+            return False
+
+    def save_record(self, collection: str, data: dict, document_id: str | None = None) -> bool:
+        """
+        Convenience wrapper to save a record. If data contains 'email' use it as document id.
+        """
+        doc_id = document_id
+        if doc_id is None and isinstance(data, dict):
+            # prefer email as document id when present
+            possible = data.get("email") or data.get("id")
+            if possible:
+                doc_id = possible
+        return self.save_to_firestore(collection, doc_id, data)
 
 
     def get_document(self, collection, document_id):
@@ -630,3 +617,37 @@ Content of the notes:
                 print(f"[ERRO FIREBASE] {e}")
 
         return summary
+
+    def _ensure_firebase(self):
+        """
+        Initialize firebase_admin if not already initialized.
+        Looks for credentials file at 'segredos/firebase_admin.json' and falls back to
+        application default credentials if not found.
+        """
+        try:
+            import firebase_admin
+            from firebase_admin import credentials, initialize_app
+
+            if getattr(firebase_admin, "_apps", None):
+                # already initialized
+                self._firebase_initialized = True
+                return True
+
+            cred_path = os.path.join("segredos", "firebase_admin.json")
+            if os.path.exists(cred_path):
+                cred = credentials.Certificate(cred_path)
+                initialize_app(cred)
+            else:
+                # try default credentials
+                try:
+                    initialize_app()
+                except Exception:
+                    # no creds available
+                    raise RuntimeError("Firebase credentials not found in segredos/firebase_admin.json and default init failed.")
+
+            self._firebase_initialized = True
+            return True
+        except Exception as e:
+            self._firebase_init_error = e
+            print(f"[ERRO FIREBASE INIT] {e}")
+            return False
