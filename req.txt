@@ -8,6 +8,7 @@ ibm_watsonx_orchestrate
 
 # firebase
 firebase-admin
+matplotlib
 
 # utilidades
 bs4
@@ -16,15 +17,6 @@ pyyaml
 protobuf
 sentencepiece
 
-# Granite local
-torch
-transformers
-tokenizers
-safetensors
-
-# quantização
-bitsandbytes
-accelerate
 
 # acelerar inference (opcional)
 #xformers==0.0.25   # CUDA 12.1
