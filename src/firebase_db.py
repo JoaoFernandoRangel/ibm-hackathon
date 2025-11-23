@@ -20,8 +20,8 @@ def init_firebase():
         import streamlit as st  # type: ignore
     except Exception:
         st = None
-    secrets = kc.load_from_streamlit() if st is not None else {}
-    env = kc.load_from_streamlit() or {}
+    secrets = kc.load_from_streamlit(st) if st is not None else {}
+    env = kc.load_from_streamlit(st) or {}
 
     # prefer explicit service-account fields from secrets/env
     project_id = secrets.get("FIREBASE_PROJECT_ID")

@@ -81,7 +81,7 @@ class KeyChain:
 '''
 Exemplo de uso:
 kc = KeyChain(".env")
-keys = kc.load_from_streamlit()
+keys = kc.load_from_streamlit(st)
 print(keys["GMAIL_CLIENT_ID"])
 
 #Ou, para Streamlit:

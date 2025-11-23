@@ -9,7 +9,7 @@ project_id = "cf0f0ec9-62ec-4191-92e0-0c07d15a5fb0"
 # ================================
 
 kc = KeyChain()                   # já carrega o .env automaticamente
-keys = kc.load_from_streamlit()         # ou kc.load_from_streamlit(st)
+keys = kc.load_from_streamlit(st)         # ou kc.load_from_streamlit(st)
 
 API_KEY = keys["GMAIL_APIKEY"]    # mesma apikey que estava no apikey.json
 URL = "https://us-south.ml.cloud.ibm.com"
